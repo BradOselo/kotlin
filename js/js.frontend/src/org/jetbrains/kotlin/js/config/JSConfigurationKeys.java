@@ -93,4 +93,7 @@ public class JSConfigurationKeys {
 
     public static final CompilerConfigurationKey<Collection<String>> REPOSITORIES =
             CompilerConfigurationKey.create("set up additional repository paths");
+
+    public static final CompilerConfigurationKey<Boolean> TRACE_METHOD_INVOCATIONS =
+            CompilerConfigurationKey.create("trace method invocations");
 }

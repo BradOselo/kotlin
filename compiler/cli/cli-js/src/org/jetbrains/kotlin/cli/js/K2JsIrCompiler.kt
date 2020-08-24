@@ -273,6 +273,8 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                 multiModule = arguments.irPerModule,
                 relativeRequirePath = true,
                 propertyLazyInitialization = arguments.irPropertyLazyInitialization,
+                traceMethods = arguments.traceMethods,
+                focusOnTest = arguments.irFocusOnTest
             )
 
 

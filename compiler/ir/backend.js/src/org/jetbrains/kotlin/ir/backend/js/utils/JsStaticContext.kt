@@ -16,6 +16,7 @@ class JsStaticContext(
     val backendContext: JsIrBackendContext,
     private val irNamer: IrNamer,
     val globalNameScope: NameScope
+    val traceMethods: Boolean,
 ) : IrNamer by irNamer {
     val intrinsics = JsIntrinsicTransformers(backendContext)
     val classModels = mutableMapOf<IrClassSymbol, JsIrClassModel>()

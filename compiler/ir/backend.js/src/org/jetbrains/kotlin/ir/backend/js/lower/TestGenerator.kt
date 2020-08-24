@@ -26,15 +26,15 @@ import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-fun generateTests(context: JsIrBackendContext, moduleFragment: IrModuleFragment) {
-    val generator = TestGenerator(context) { context.createTestContainerFun(moduleFragment) }
+fun generateTests(context: JsIrBackendContext, moduleFragment: IrModuleFragment, focusOnTest: String?) {
+    val generator = TestGenerator(context, focusOnTest) { context.createTestContainerFun(moduleFragment) }
 
     moduleFragment.files.toList().forEach {
         generator.lower(it)
     }
 }
 
-class TestGenerator(val context: JsIrBackendContext, val testContainerFactory: () -> IrSimpleFunction) : FileLoweringPass {
+class TestGenerator(val context: JsIrBackendContext, val focusOnTest: String?, val testContainerFactory: () -> IrSimpleFunction) : FileLoweringPass {
 
     override fun lower(irFile: IrFile) {
         irFile.declarations.forEach {
@@ -126,6 +126,8 @@ class TestGenerator(val context: JsIrBackendContext, val testContainerFactory: (
         irClass: IrClass,
         parentFunction: IrSimpleFunction
     ) {
+        if (focusOnTest != null && testFun.fqNameWhenAvailable?.asString() != focusOnTest) return
+
         val fn = context.testFun!!.createInvocation(testFun.name.asString(), parentFunction, testFun.isIgnored)
         val body = fn.body as IrBlockBody
 

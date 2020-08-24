@@ -52,6 +52,8 @@ fun compile(
     multiModule: Boolean = false,
     relativeRequirePath: Boolean = false,
     propertyLazyInitialization: Boolean,
+    traceMethods: Boolean = false,
+    focusOnTest: String? = null,
 ): CompilerResult {
     val (moduleFragment: IrModuleFragment, dependencyModules, irBuiltIns, symbolTable, deserializer) =
         loadIr(project, mainModule, analyzer, configuration, allDependencies, friendDependencies, irFactory)
@@ -87,7 +89,7 @@ fun compile(
     }
 
     // TODO should be done incrementally
-    generateTests(context, allModules.last())
+    generateTests(context, allModules.last(), focusOnTest)
 
     if (dceDriven) {
         val controller = MutableController(context, pirLowerings)
@@ -118,7 +120,8 @@ fun compile(
             fullJs = generateFullJs,
             dceJs = generateDceJs,
             multiModule = multiModule,
-            relativeRequirePath = relativeRequirePath
+            relativeRequirePath = relativeRequirePath,
+            traceMethods = traceMethods,
         )
         return transformer.generateModule(allModules)
     }
