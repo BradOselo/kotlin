@@ -54,6 +54,7 @@ fun compile(
     propertyLazyInitialization: Boolean,
     traceMethods: Boolean = false,
     focusOnTest: String? = null,
+    forceAllJs: Boolean = false,
 ): CompilerResult {
     val (moduleFragment: IrModuleFragment, dependencyModules, irBuiltIns, symbolTable, deserializer) =
         loadIr(project, mainModule, analyzer, configuration, allDependencies, friendDependencies, irFactory)
