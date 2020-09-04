@@ -274,9 +274,8 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                 relativeRequirePath = true,
                 propertyLazyInitialization = arguments.irPropertyLazyInitialization,
                 traceMethods = arguments.traceMethods,
-                focusOnTest = arguments.irFocusOnTest
+                focusOnTest = arguments.irFocusOnTest,
             )
-
 
             val jsCode = if (arguments.irDce && !arguments.irDceDriven) compiledModule.dceJsCode!! else compiledModule.jsCode!!
             outputFile.writeText(jsCode.mainModule)
