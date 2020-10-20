@@ -212,6 +212,7 @@ internal open class GradleCompilerRunner(
             val nameToModules = HashMap<String, HashSet<IncrementalModuleEntry>>()
             val jarToClassListFile = HashMap<File, File>()
             val jarToModule = HashMap<File, IncrementalModuleEntry>()
+            val jarToJarSnapshot = HashMap<File, File>()
 
             for (project in gradle.rootProject.allprojects) {
 
@@ -227,7 +228,8 @@ internal open class GradleCompilerRunner(
                         project.path,
                         compilation.ownModuleName,
                         project.buildDir,
-                        taskData.buildHistoryFile
+                        taskData.buildHistoryFile,
+                        taskData.abiSnapshotFile
                     )
                     dirToModule[taskData.destinationDir.get()] = module
 
@@ -255,6 +257,8 @@ internal open class GradleCompilerRunner(
                             if (target is KotlinWithJavaTarget<*>) {
                                 val jar = project.tasks.getByName(target.artifactsTaskName) as Jar
                                 jarToClassListFile[jar.archivePathCompatible.canonicalFile] = target.defaultArtifactClassesListFile.get()
+                                //configure abiSnapshot mapping for jars
+                                jarToJarSnapshot[jar.archivePathCompatible.canonicalFile] = target.buildDir.get().file(taskData.abiSnapshotRelativePath).asFile
                             }
                         }
                     }
@@ -267,7 +271,8 @@ internal open class GradleCompilerRunner(
                 dirToModule = dirToModule,
                 nameToModules = nameToModules,
                 jarToClassListFile = jarToClassListFile,
-                jarToModule = jarToModule
+                jarToModule = jarToModule,
+                jarToJarSnapshot = jarToJarSnapshot
             ).also {
                 cachedGradle = WeakReference(gradle)
                 cachedModulesInfo = it

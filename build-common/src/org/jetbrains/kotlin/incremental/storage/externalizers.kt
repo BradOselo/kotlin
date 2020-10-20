@@ -32,12 +32,18 @@ object LookupSymbolKeyDescriptor : KeyDescriptor<LookupSymbolKey> {
         val first = input.readInt()
         val second = input.readInt()
 
-        return LookupSymbolKey(first, second)
+        val name = input.readUTF()
+        val scope = input.readUTF()
+
+        return LookupSymbolKey(first, second, name, scope)
     }
 
     override fun save(output: DataOutput, value: LookupSymbolKey) {
         output.writeInt(value.nameHash)
         output.writeInt(value.scopeHash)
+        output.writeUTF(value.name)
+        output.writeUTF(value.scope)
+
     }
 
     override fun getHashCode(value: LookupSymbolKey): Int = value.hashCode()

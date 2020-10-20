@@ -192,7 +192,7 @@ open class A {
 
         project.build("build") {
             assertSuccessful()
-            val affectedSources = project.projectDir.getFilesByNames("A.kt", "B.kt", "AA.kt", "AAA.kt", "BB.kt")
+            val affectedSources = project.projectDir.getFilesByNames("A.kt", "B.kt", "AA.kt", "AAA.kt")
             val relativePaths = project.relativize(affectedSources)
             assertCompiledKotlinSources(relativePaths)
         }
@@ -238,9 +238,12 @@ open class A {
         project.projectFile("BarDummy.kt").modify {
             it.replace("class BarDummy", "open class BarDummy")
         }
+
+        //don't need to recompile app classes because lib's proto stays the same
         project.build("build") {
             assertSuccessful()
-            val affectedSources = project.projectDir.allKotlinFiles()
+            val affectedSources = project.projectDir.projectFile("JavaClass", "TrackedJavaClass", "useTrackedJavaClassSameModule.kt",
+            "A.kt","B.kt", "BarDummy.kt", "barUseA.kt", "barUseAB.kt", "barUseB.kt", "TestDataPath")
             val relativePaths = project.relativize(affectedSources)
             assertCompiledKotlinSources(relativePaths)
         }
@@ -255,6 +258,42 @@ open class A {
 
     protected abstract val additionalLibDependencies: String
     protected abstract val compileKotlinTaskName: String
+
+    @Test
+    fun testAddDependencyToLib2() {
+        val project = defaultProject()
+
+        project.build("build") {
+            assertSuccessful()
+        }
+
+        val libBuildGradle = File(project.projectDir, "lib/build.gradle")
+        Assert.assertTrue("$libBuildGradle does not exist", libBuildGradle.exists())
+        libBuildGradle.modify {
+            """
+                $it
+
+                dependencies {
+                    $additionalLibDependencies
+                }
+            """.trimIndent()
+        }
+
+        // Change file so Gradle won't skip :app:compile
+        project.projectFile("BarDummy.kt").modify {
+            it.replace("class BarDummy", "open class BarDummy")
+        }
+
+        val useTestClassFile = project.projectFile("useTestDataPath.kt")
+        val barDummyClassFile = project.projectFile("BarDummy.kt")
+
+        project.build("build") {
+            assertSuccessful()
+            val relativePaths = project.relativize(useTestClassFile, barDummyClassFile)
+            assertCompiledKotlinSources(relativePaths)
+        }
+
+    }
 
     @Test
     fun testAddDependencyToLib() {

@@ -35,13 +35,14 @@ enum class CompilerSystemProperties(val property: String, val alwaysDirectAccess
     DAEMON_RMI_SOCKET_CONNECT_INTERVAL_PROPERTY("kotlin.daemon.socket.connect.interval"),
     KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY("kotlin.environment.keepalive"),
     COMPILE_DAEMON_CUSTOM_RUN_FILES_PATH_FOR_TESTS("kotlin.daemon.custom.run.files.path.for.tests"),
+    COMPILE_INCREMENTAL_WITH_CLASSPATH_SHAPSHOTS("kotlin.incremental.classpath.snapshot.enabled"),
     KOTLIN_COLORS_ENABLED_PROPERTY("kotlin.colors.enabled"),
     OS_NAME("os.name", alwaysDirectAccess = true),
     TMP_DIR("java.io.tmpdir"),
     USER_HOME("user.home", alwaysDirectAccess = true),
     JAVA_VERSION("java.specification.version", alwaysDirectAccess = true),
     JAVA_HOME("java.home", alwaysDirectAccess = true),
-    JAVA_CLASS_PATH("java.class.path", alwaysDirectAccess = true),
+    JAVA_CLASS_PATH("java.class.path", alwaysDirectAccess = true)
     ;
 
     private fun <T> getProperFunction(custom: T?, default: T): T {
@@ -73,6 +74,11 @@ enum class CompilerSystemProperties(val property: String, val alwaysDirectAccess
 
 val isWindows: Boolean
     get() = CompilerSystemProperties.OS_NAME.value!!.lowercase().startsWith("windows")
+
+fun String?.isTrue(defaultValue: Boolean = false): Boolean = when (this) {
+    null -> defaultValue
+    else -> this.toBoolean()
+}
 
 fun String?.toBooleanLenient(): Boolean? = when (this?.lowercase()) {
     null -> false

@@ -28,9 +28,17 @@ internal open class KotlinCompileTaskData(
         File(File(compilation.project.buildDir, KOTLIN_BUILD_DIR_NAME), taskName)
     }
 
-    //TODO
     val buildHistoryFile: File by project.provider {
         File(taskBuildDirectory, "build-history.bin")
+    }
+
+    val abiSnapshotFile: File by project.provider {
+        File(taskBuildDirectory, "abi-snapshot.bin")
+    }
+
+    val abiSnapshotRelativePath: String by project.provider {
+        //TODO update to support any jar changes
+        "$taskName/abi-snapshot.bin"
     }
 
     var javaOutputDir: File? = null

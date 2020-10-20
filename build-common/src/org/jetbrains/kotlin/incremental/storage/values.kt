@@ -16,8 +16,8 @@
 
 package org.jetbrains.kotlin.incremental.storage
 
-data class LookupSymbolKey(val nameHash: Int, val scopeHash: Int) : Comparable<LookupSymbolKey> {
-    constructor(name: String, scope: String) : this(name.hashCode(), scope.hashCode())
+data class LookupSymbolKey(val nameHash: Int, val scopeHash: Int, val name:String, val scope:String) : Comparable<LookupSymbolKey> {
+    constructor(name: String, scope: String) : this(name.hashCode(), scope.hashCode(), name, scope)
 
     override fun compareTo(other: LookupSymbolKey): Int {
         val nameCmp = nameHash.compareTo(other.nameHash)

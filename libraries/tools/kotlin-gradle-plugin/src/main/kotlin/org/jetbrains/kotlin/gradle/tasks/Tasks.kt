@@ -341,6 +341,11 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments> : AbstractKotl
         GradleCompileTaskProvider(this)
     }
 
+    @get:OutputDirectory
+    val kotlinBuildCacheDir: File by project.provider {
+        taskBuildDirectory
+    }
+
     internal open fun compilerRunner(
         javaExecutable: File,
         jdkToolsJar: File?
@@ -354,34 +359,36 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments> : AbstractKotl
 
     @TaskAction
     fun execute(inputs: IncrementalTaskInputs) {
-        systemPropertiesService.get().startIntercept()
-        CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
+        metrics.measure(BuildTime.BACKUP_OUTPUT) {
+            systemPropertiesService.get().startIntercept()
+            CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
 
-        // If task throws exception, but its outputs are changed during execution,
-        // then Gradle forces next build to be non-incremental (see Gradle's DefaultTaskArtifactStateRepository#persistNewOutputs)
-        // To prevent this, we backup outputs before incremental build and restore when exception is thrown
-        val outputsBackup: TaskOutputsBackup? =
-            if (isIncrementalCompilationEnabled() && inputs.isIncremental)
-                metrics.measure(BuildTime.BACKUP_OUTPUT) {
-                    TaskOutputsBackup(allOutputFiles())
-                }
-            else null
+            // If task throws exception, but its outputs are changed during execution,
+            // then Gradle forces next build to be non-incremental (see Gradle's DefaultTaskArtifactStateRepository#persistNewOutputs)
+            // To prevent this, we backup outputs before incremental build and restore when exception is thrown
+            val outputsBackup: TaskOutputsBackup? =
+                if (isIncrementalCompilationEnabled() && inputs.isIncremental)
+                    metrics.measure(BuildTime.BACKUP_OUTPUT) {
+                        TaskOutputsBackup(allOutputFiles())
+                    }
+                else null
 
-        if (!isIncrementalCompilationEnabled()) {
-            clearLocalState("IC is disabled")
-        } else if (!inputs.isIncremental) {
-            clearLocalState("Task cannot run incrementally")
-        }
-
-        try {
-            executeImpl(inputs)
-        } catch (t: Throwable) {
-            if (outputsBackup != null) {
-                metrics.measure(BuildTime.RESTORE_OUTPUT_FROM_BACKUP) {
-                    outputsBackup.restoreOutputs()
-                }
+            if (!isIncrementalCompilationEnabled()) {
+                clearLocalState("IC is disabled")
+            } else if (!inputs.isIncremental) {
+                clearLocalState("Task cannot run incrementally")
             }
-            throw t
+
+            try {
+                executeImpl(inputs)
+            } catch (t: Throwable) {
+                if (outputsBackup != null) {
+                    metrics.measure(BuildTime.RESTORE_OUTPUT_FROM_BACKUP) {
+                        outputsBackup.restoreOutputs()
+                    }
+                }
+                throw t
+            }
         }
     }
 
