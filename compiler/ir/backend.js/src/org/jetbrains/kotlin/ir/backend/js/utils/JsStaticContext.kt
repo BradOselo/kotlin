@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.js.backend.ast.JsGlobalBlock
 class JsStaticContext(
     val backendContext: JsIrBackendContext,
     private val irNamer: IrNamer,
-    val globalNameScope: NameScope
+    val globalNameScope: NameScope,
     val traceMethods: Boolean,
 ) : IrNamer by irNamer {
     val intrinsics = JsIntrinsicTransformers(backendContext)

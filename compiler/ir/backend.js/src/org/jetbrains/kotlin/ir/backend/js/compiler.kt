@@ -59,7 +59,7 @@ fun compile(
     irPerModulePrefix: String? = null,
 ): CompilerResult {
     val (moduleFragment: IrModuleFragment, dependencyModules, irBuiltIns, symbolTable, deserializer, moduleToName) =
-        loadIr(project, mainModule, analyzer, configuration, allDependencies, friendDependencies, irFactory)
+        loadIr(project, mainModule, analyzer, configuration, allDependencies, friendDependencies, irFactory, forceAllJs)
 
     val moduleDescriptor = moduleFragment.descriptor
 
