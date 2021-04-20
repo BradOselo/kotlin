@@ -63,13 +63,13 @@ internal class CocoapodsBuildDirs(val project: Project) {
 
 internal fun String.asValidFrameworkName() = replace('-', '_')
 
-private val Family.toPodGenTaskName: String
+val Family.toPodGenTaskName: String
     get() = lowerCamelCaseName(
         KotlinCocoapodsPlugin.POD_GEN_TASK_NAME,
         name
     )
 
-private fun String.toSetupBuildTaskName(pod: CocoapodsDependency): String = lowerCamelCaseName(
+fun String.toSetupBuildTaskName(pod: CocoapodsDependency): String = lowerCamelCaseName(
     KotlinCocoapodsPlugin.POD_SETUP_BUILD_TASK_NAME,
     pod.name.asValidTaskName(),
     this

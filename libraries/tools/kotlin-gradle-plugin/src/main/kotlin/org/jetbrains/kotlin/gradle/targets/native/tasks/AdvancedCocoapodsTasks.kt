@@ -108,7 +108,7 @@ open class PodInstallTask : DefaultTask() {
     }
 }
 
-private interface ExtendedErrorDiagnostic {
+interface ExtendedErrorDiagnostic {
     fun isAppropriateOutput(output: String): Boolean
     val message: String
 }
@@ -300,7 +300,7 @@ open class PodDownloadGitTask : DownloadCocoapodsTask() {
     }
 }
 
-private fun runCommand(
+fun runCommand(
     command: List<String>,
     logger: Logger,
     extendedErrorDiagnostic: ExtendedErrorDiagnostic? = null,
@@ -444,14 +444,14 @@ open class PodSetupBuildTask : DefaultTask() {
     lateinit var pod: Provider<CocoapodsDependency>
 
     @get:OutputFile
-    internal val buildSettingsFile: Provider<File> = project.provider {
+    val buildSettingsFile: Provider<File> = project.provider {
         project.cocoapodsBuildDirs
             .buildSettings
             .resolve(getBuildSettingFileName(pod.get(), sdk.get()))
     }
 
     @get:Internal
-    internal lateinit var podsXcodeProjDir: Provider<File>
+    lateinit var podsXcodeProjDir: Provider<File>
 
     @TaskAction
     fun setupBuild() {
