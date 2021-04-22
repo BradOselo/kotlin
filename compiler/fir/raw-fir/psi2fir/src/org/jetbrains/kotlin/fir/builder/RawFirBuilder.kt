@@ -1466,7 +1466,7 @@ open class RawFirBuilder(
                 annotationEntry.extractArgumentsTo(this)
                 val name = (annotationTypeRef as? FirUserTypeRef)?.qualifier?.last()?.name ?: Name.special("<no-annotation-name>")
                 calleeReference = buildSimpleNamedReference {
-                    source = this@buildAnnotationCall.source
+                    source = (annotationEntry.typeReference?.typeElement as? KtUserType)?.referenceExpression?.toFirSourceElement()
                     this.name = name
                 }
             }
