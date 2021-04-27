@@ -24,7 +24,7 @@ val normal = generate {
     yield(42)
 }
 
-val extension = <!NEW_INFERENCE_NO_INFORMATION_FOR_PARAMETER{NI}, TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>generate<!> {
+val extension = <!TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>generate<!> {
     extensionYield("foo")
 }
 

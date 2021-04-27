@@ -28,7 +28,7 @@ val memberWithoutAnn = <!NEW_INFERENCE_NO_INFORMATION_FOR_PARAMETER{NI}, TYPE_IN
     add(42)
 }
 
-val extension = <!NEW_INFERENCE_NO_INFORMATION_FOR_PARAMETER{NI}, TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>build<!> {
+val extension = <!TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>build<!> {
     extensionAdd("foo")
 }
 
