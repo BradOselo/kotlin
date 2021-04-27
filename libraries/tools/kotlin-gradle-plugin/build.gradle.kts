@@ -1,11 +1,10 @@
 import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.pill.PillExtension
 
 plugins {
     java
-    kotlin("jvm")
     `java-gradle-plugin`
+    id("gradle-plugin-common-configuration")
     id("org.jetbrains.dokka")
     id("jps-compatible")
 }
@@ -17,12 +16,7 @@ configure<GradlePluginDevelopmentExtension> {
     isAutomatedPublishing = false
 }
 
-publish()
-
 val jarContents by configurations.creating
-
-sourcesJar()
-javadocJar()
 
 repositories {
     google()
@@ -40,7 +34,6 @@ dependencies {
     compileOnly(project(":compiler:incremental-compilation-impl"))
     compileOnly(project(":daemon-common"))
 
-    implementation(kotlinStdlib())
     implementation(project(":kotlin-util-klib"))
     compileOnly(project(":native:kotlin-native-utils"))
     compileOnly(project(":kotlin-reflect-api"))
@@ -66,8 +59,7 @@ dependencies {
     compileOnly("com.android.tools.build:builder:3.4.0")
     compileOnly("com.android.tools.build:builder-model:3.4.0")
     compileOnly("org.codehaus.groovy:groovy-all:2.4.12")
-    compileOnly(gradleApi())
-
+    compileOnly(project(":kotlin-reflect"))
     compileOnly(intellijCoreDep()) { includeJars("intellij-core") }
 
     runtimeOnly(projectRuntimeJar(":kotlin-compiler-embeddable"))
@@ -76,7 +68,6 @@ dependencies {
     runtimeOnly(projectRuntimeJar(":kotlin-compiler-runner"))
     runtimeOnly(projectRuntimeJar(":kotlin-scripting-compiler-embeddable"))
     runtimeOnly(projectRuntimeJar(":kotlin-scripting-compiler-impl-embeddable"))
-    runtimeOnly(project(":kotlin-reflect"))
 
     jarContents(compileOnly(intellijDep()) {
         includeJars("asm-all", "gson", "serviceMessages", rootProject = rootProject)
@@ -120,13 +111,6 @@ runtimeJar(rewriteDefaultJarDepsToShadedCompiler()).configure {
 }
 
 tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jdkHome = rootProject.extra["JDK_18"] as String
-        kotlinOptions.languageVersion = "1.3"
-        kotlinOptions.apiVersion = "1.3"
-        kotlinOptions.freeCompilerArgs += listOf("-Xskip-prerelease-check")
-    }
-
     named<ProcessResources>("processResources") {
         val propertiesToExpand = mapOf(
             "projectVersion" to project.version,
@@ -138,10 +122,6 @@ tasks {
         filesMatching("project.properties") {
             expand(propertiesToExpand)
         }
-    }
-
-    named<Jar>("jar") {
-        callGroovy("manifestAttributes", manifest, project)
     }
 
     withType<ValidatePlugins>().configureEach {
