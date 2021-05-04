@@ -34,7 +34,6 @@ class IrModuleToJsTransformer(
     private val relativeRequirePath: Boolean = false,
     private val traceMethods: Boolean = false,
     private val moduleToName: Map<IrModuleFragment, String> = emptyMap(),
-    private val irPerModulePrefix: String? = null,
 ) {
     private val generateRegionComments = backendContext.configuration.getBoolean(JSConfigurationKeys.GENERATE_REGION_COMMENTS)
 
@@ -195,7 +194,7 @@ class IrModuleToJsTransformer(
     }
 
     private fun IrModuleFragment.externalModuleName(): String {
-        return (irPerModulePrefix ?: "") + (moduleToName[this] ?: sanitizeName(safeName))
+        return moduleToName[this] ?: sanitizeName(safeName)
     }
 
     private fun generateCrossModuleImports(
