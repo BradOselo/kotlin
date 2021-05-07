@@ -26,11 +26,11 @@ class ModulesApiHistoryAndroidTest {
     private lateinit var appRoot: File
     private lateinit var appKotlinDestination: File
     private lateinit var appHistory: File
-    private lateinit var appJarSnapshot: File
+    private lateinit var appAbiSnapshot: File
     private lateinit var libRoot: File
     private lateinit var libKotlinDestination: File
     private lateinit var libHistory: File
-    private lateinit var libJarSnapshot: File
+    private lateinit var libAbiSnapshot: File
 
     private lateinit var androidHistory: ModulesApiHistoryAndroid
 
@@ -40,9 +40,9 @@ class ModulesApiHistoryAndroidTest {
 
         appRoot = projectRoot.resolve("app")
         appHistory = appRoot.resolve("build/tmp/kotlin/app_history.bin")
-        appJarSnapshot = appRoot.resolve("build/tmp/kotlin/app_jar_snapshot.bin")
+        appAbiSnapshot = appRoot.resolve("build/tmp/kotlin/app_jar_snapshot.bin")
         appKotlinDestination = appRoot.resolve("build/tmp/kotlin-classes").apply { mkdirs() }
-        val appEntry = IncrementalModuleEntry(":app", "app", appRoot.resolve("build"), appHistory, appJarSnapshot)
+        val appEntry = IncrementalModuleEntry(":app", "app", appRoot.resolve("build"), appHistory, appAbiSnapshot)
         appRoot.resolve("build/intermediates/classes/meta-inf/").apply {
             mkdirs()
             resolve("app.kotlin_module").createNewFile()
@@ -50,9 +50,9 @@ class ModulesApiHistoryAndroidTest {
 
         libRoot = projectRoot.resolve("lib")
         libHistory = libRoot.resolve("lib/build/tmp/kotlin/lib_history.bin")
-        libJarSnapshot = libRoot.resolve("lib/build/tmp/kotlin/lib_jar_snapshot.bin")
+        libAbiSnapshot = libRoot.resolve("lib/build/tmp/kotlin/lib_jar_snapshot.bin")
         libKotlinDestination = libRoot.resolve("build/tmp/kotlin-classes").apply { mkdirs() }
-        val libEntry = IncrementalModuleEntry(":lib", "lib", libRoot.resolve("build"), libHistory, libJarSnapshot)
+        val libEntry = IncrementalModuleEntry(":lib", "lib", libRoot.resolve("build"), libHistory, libAbiSnapshot)
         libRoot.resolve("build/intermediates/classes/meta-inf/").apply {
             mkdirs()
             resolve("lib.kotlin_module").createNewFile()
@@ -65,7 +65,7 @@ class ModulesApiHistoryAndroidTest {
             nameToModules = mapOf("app" to setOf(appEntry), "lib" to setOf(libEntry)),
             jarToClassListFile = mapOf(),
             jarToModule = mapOf(),
-            jarToJarSnapshot = mapOf()
+            jarToAbiSnapshot = mapOf()
         )
 
         androidHistory = ModulesApiHistoryAndroid(info)

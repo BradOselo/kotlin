@@ -12,21 +12,21 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.sam.SAM_LOOKUP_NAME
 
 //TODO Should be in gradle daemon.
-class JarSnapshotDiffService() {
+class AbiSnapshotDiffService() {
 
     companion object {
         //Store list of changed lookups
-        private val diffCache: MutableMap<Pair<JarSnapshot, JarSnapshot>, DirtyData> = mutableMapOf()
+        private val diffCache: MutableMap<Pair<AbiSnapshot, AbiSnapshot>, DirtyData> = mutableMapOf()
 
         //TODO move out from Kotlin daemon
         fun compareJarsInternal(
-            snapshotJar: JarSnapshot, newJar: JarSnapshot,
+            oldSnapshot: AbiSnapshot, newSnapshot: AbiSnapshot,
             caches: IncrementalCacheCommon
-        ) = diffCache.computeIfAbsent(Pair(snapshotJar, newJar)) { (snapshot, actual) -> doCompute(snapshot, actual, caches, emptyList()) }
+        ) = diffCache.computeIfAbsent(Pair(oldSnapshot, newSnapshot)) { (snapshot, actual) -> doCompute(snapshot, actual, caches, emptyList()) }
 
         fun inScope(fqName: FqName, scopes: Collection<String>) = scopes.any { scope -> fqName.toString().startsWith(scope) }
 
-        fun doCompute(snapshot: JarSnapshot, actual: JarSnapshot, caches: IncrementalCacheCommon, scopes: Collection<String>): DirtyData {
+        fun doCompute(snapshot: AbiSnapshot, actual: AbiSnapshot, caches: IncrementalCacheCommon, scopes: Collection<String>): DirtyData {
 
             val dirtyFqNames = mutableListOf<FqName>()
             val dirtyLookupSymbols = mutableListOf<LookupSymbol>()

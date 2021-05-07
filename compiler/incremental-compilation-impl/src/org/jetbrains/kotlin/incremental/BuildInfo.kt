@@ -20,7 +20,7 @@ import org.jetbrains.kotlin.incremental.AbiSnapshotImpl.Companion.readAbiSnapsho
 import org.jetbrains.kotlin.incremental.AbiSnapshotImpl.Companion.writeAbiSnapshot
 import java.io.*
 
-data class BuildInfo(val startTS: Long, val dependencyToJarSnapshot: Map<String, AbiSnapshot> = mapOf()) : Serializable {
+data class BuildInfo(val startTS: Long, val dependencyToAbiSnapshot: Map<String, AbiSnapshot> = mapOf()) : Serializable {
     companion object {
         private fun ObjectInputStream.readBuildInfo() : BuildInfo {
             val ts = readLong()
@@ -36,8 +36,8 @@ data class BuildInfo(val startTS: Long, val dependencyToJarSnapshot: Map<String,
 
         private fun ObjectOutputStream.writeBuildInfo(buildInfo: BuildInfo) {
             writeLong(buildInfo.startTS)
-            writeInt(buildInfo.dependencyToJarSnapshot.size)
-            for((identifier, abiSnapshot) in buildInfo.dependencyToJarSnapshot) {
+            writeInt(buildInfo.dependencyToAbiSnapshot.size)
+            for((identifier, abiSnapshot) in buildInfo.dependencyToAbiSnapshot) {
                 writeUTF(identifier)
                 writeAbiSnapshot(abiSnapshot)
             }

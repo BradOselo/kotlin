@@ -50,13 +50,13 @@ internal fun getClasspathChanges(
             val fqNames = HashSet<FqName>()
 
             for ((module, abiSnapshot) in abiSnapshots) {
-                val actualJarSnapshot = lastBuildInfo.dependencyToJarSnapshot[module]
-                if (actualJarSnapshot == null) {
+                val actualAbiSnapshot = lastBuildInfo.dependencyToAbiSnapshot[module]
+                if (actualAbiSnapshot == null) {
 
                     reporter.report { "Some jar are removed from classpath $module" }
                     return ChangesEither.Unknown(BuildAttribute.DEP_CHANGE_REMOVED_ENTRY)
                 }
-                val diffData = JarSnapshotDiffService.doCompute(abiSnapshot, actualJarSnapshot, caches, scopes)
+                val diffData = AbiSnapshotDiffService.doCompute(abiSnapshot, actualAbiSnapshot, caches, scopes)
                 symbols.addAll(diffData.dirtyLookupSymbols)
                 fqNames.addAll(diffData.dirtyClassesFqNames)
 

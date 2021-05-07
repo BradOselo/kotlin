@@ -7,12 +7,10 @@ package org.jetbrains.kotlin.gradle.plugin
 
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.build.report.BuildReporter
-import org.jetbrains.kotlin.build.report.ICReporter
 import org.jetbrains.kotlin.incremental.*
 
-abstract class JarSnapshotDiffService() : BuildService<JarSnapshotDiffService.Parameters> {
+abstract class AbiSnapshotDiffService() : BuildService<org.jetbrains.kotlin.gradle.plugin.AbiSnapshotDiffService.AbiSnapshotDiffService.Parameters> {
     abstract class Parameters : BuildServiceParameters {
         abstract val caches: IncrementalCachesManager<*>
         abstract val reporter: BuildReporter
@@ -25,10 +23,10 @@ abstract class JarSnapshotDiffService() : BuildService<JarSnapshotDiffService.Pa
 
     companion object {
 //        //Store list of changed lookups
-//        val diffCache: MutableMap<Pair<JarSnapshot, JarSnapshot>, DirtyFilesContainer> = mutableMapOf()
+//        val diffCache: MutableMap<Pair<AbiSnapshot, AbiSnapshot>, DirtyFilesContainer> = mutableMapOf()
 //        @TestOnly
 //        fun compareJarsInternal(caches: IncrementalCachesManager<*>, reporter: ICReporter, sourceFilesExtensions: List<String>,
-//                                snapshot: JarSnapshot, newJar: JarSnapshot) =
+//                                snapshot: AbiSnapshot, newJar: AbiSnapshot) =
 //            diffCache.computeIfAbsent(Pair(snapshot, newJar)) { (snapshotJar, actualJar) ->
 //                DirtyFilesContainer(caches, reporter, sourceFilesExtensions)
 //                    .also {
@@ -41,7 +39,7 @@ abstract class JarSnapshotDiffService() : BuildService<JarSnapshotDiffService.Pa
     }
 
 //    @Synchronized
-//    fun compareJarsInternal(snapshot: JarSnapshot, newJar: JarSnapshot): DirtyFilesContainer {
+//    fun compareJarsInternal(snapshot: AbiSnapshot, newJar: AbiSnapshot): DirtyFilesContainer {
 //        return diffCache.computeIfAbsent(Pair(snapshot, newJar)) { (snapshotJar, actualJar) ->
 //            DirtyFilesContainer(caches, reporter, sourceFilesExtensions)
 //                .also {

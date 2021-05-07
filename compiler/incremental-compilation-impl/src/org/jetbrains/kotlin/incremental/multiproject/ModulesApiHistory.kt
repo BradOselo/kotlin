@@ -139,7 +139,7 @@ class ModulesApiHistoryJvm(modulesInfo: IncrementalModuleInfo) : ModulesApiHisto
         //TODO update here to support any jar changes
         val abiSnapshot = modulesInfo.jarToModule[jar]?.abiSnapshot
         //TODO relative way to get current abiSnapshot (for non project jar)
-        return Either.Success(abiSnapshot ?: modulesInfo.jarToJarSnapshot[jar])
+        return Either.Success(abiSnapshot ?: modulesInfo.jarToAbiSnapshot[jar])
     }
 }
 
