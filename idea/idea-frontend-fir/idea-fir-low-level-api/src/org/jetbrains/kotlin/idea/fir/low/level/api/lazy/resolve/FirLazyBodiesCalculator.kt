@@ -18,8 +18,8 @@ import org.jetbrains.kotlin.idea.fir.low.level.api.providers.firIdeProvider
 import org.jetbrains.kotlin.psi.*
 
 internal object FirLazyBodiesCalculator {
-    fun calculateLazyBodiesInside(element: FirElement, designation: FirDeclarationDesignation) {
-        element.transform<FirElement, MutableList<FirDeclaration>>(
+    fun calculateLazyBodiesInside(designation: FirDeclarationDesignation) {
+        designation.declaration.transform<FirElement, MutableList<FirDeclaration>>(
             FirLazyBodiesCalculatorTransformer,
             designation.toSequence(includeTarget = true).toMutableList()
         )
