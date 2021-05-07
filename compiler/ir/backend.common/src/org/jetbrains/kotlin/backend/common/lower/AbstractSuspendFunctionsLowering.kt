@@ -20,14 +20,12 @@ import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
-import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.classifierOrFail
-import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
-import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.*
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val context: C) : FileLoweringPass {
 
@@ -58,6 +56,50 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
         markSuspendLambdas(irFile)
         buildCoroutines(irFile)
         transformCallableReferencesToSuspendLambdas(irFile)
+        addMissingSupertypesToSuspendFunctionImplementingClasses(irFile)
+    }
+
+    private fun addMissingSupertypesToSuspendFunctionImplementingClasses(irFile: IrFile) {
+        irFile.acceptChildrenVoid(object : IrElementVisitorVoid {
+            override fun visitElement(element: IrElement) = Unit
+
+            override fun visitClass(declaration: IrClass) {
+                addMissingSupertypes(declaration)
+                declaration.acceptChildrenVoid(this)
+            }
+
+            private fun addMissingSupertypes(clazz: IrClass) {
+                var suspendFunctionType: IrSimpleType? = null
+                for (superType in clazz.superTypes) {
+                    if (superType.isFunction())
+                        return
+                    else if (superType.isSuspendFunction())
+                        suspendFunctionType = superType.safeAs()
+                }
+
+                val suspendFunctionClassSymbol = suspendFunctionType?.classifierOrNull?.safeAs<IrClassSymbol>() ?: return
+                val suspendFunctionSymbol = suspendFunctionClassSymbol.getSimpleFunction("invoke")!!
+
+                val invokeFunction = clazz.findDeclaration<IrSimpleFunction> {
+                    it.name.asString() == "invoke" && suspendFunctionSymbol in it.overriddenSymbols
+                }!!
+
+                val suspendFunctionArity = suspendFunctionSymbol.owner.valueParameters.size
+                val functionClassSymbol = symbols.functionN(suspendFunctionArity + 1)
+                val functionSymbol = functionClassSymbol.getSimpleFunction("invoke")!!
+
+                invokeFunction.overriddenSymbols += functionSymbol
+
+                val functionClassTypeArguments = suspendFunctionType.arguments.mapIndexed { index, argument ->
+                    val type = (argument as IrTypeProjection).type
+                    if (index == suspendFunctionArity) continuationClassSymbol.typeWith(type) else type
+                } + context.irBuiltIns.anyNType
+
+                val functionType = functionClassSymbol.typeWith(functionClassTypeArguments)
+
+                clazz.superTypes += functionType
+            }
+        })
     }
 
     private fun buildCoroutines(irFile: IrFile) {
