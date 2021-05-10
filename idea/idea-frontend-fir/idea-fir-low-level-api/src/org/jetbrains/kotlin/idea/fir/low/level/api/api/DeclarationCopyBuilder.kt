@@ -166,7 +166,7 @@ internal object DeclarationCopyBuilder {
         return RawFirNonLocalDeclarationBuilder.buildWithReplacement(
             session = originalFirDeclaration.declarationSiteSession,
             baseScopeProvider = originalFirDeclaration.declarationSiteSession.firIdeProvider.kotlinScopeProvider,
-            designation = originalFirDeclaration.collectDesignation().path,
+            designation = originalFirDeclaration.collectDesignation(),
             declarationToBuild = rootNonLocalDeclaration,
             replacement = replacement,
         ) as D
