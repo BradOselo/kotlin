@@ -6,7 +6,6 @@
 package org.jetbrains.kotlin.idea.fir.low.level.api.lazy.resolve
 
 import org.jetbrains.kotlin.fir.FirElement
-import org.jetbrains.kotlin.fir.builder.RawFirFragmentForLazyBodiesBuilder
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.expressions.FirWrappedDelegateExpression
 import org.jetbrains.kotlin.fir.expressions.impl.FirLazyBlock
@@ -33,7 +32,7 @@ internal object FirLazyBodiesCalculator {
 
     fun calculateLazyBodiesForFunction(simpleFunction: FirSimpleFunction, designation: List<FirDeclaration>) {
         if (simpleFunction.body !is FirLazyBlock) return
-        val newFunction = RawFirFragmentForLazyBodiesBuilder.build(
+        val newFunction = RawFirNonLocalDeclarationBuilder.build(
             session = simpleFunction.declarationSiteSession,
             baseScopeProvider = simpleFunction.declarationSiteSession.firIdeProvider.kotlinScopeProvider,
             designation = designation,
@@ -49,7 +48,7 @@ internal object FirLazyBodiesCalculator {
         require(!secondaryConstructor.isPrimary)
         if (secondaryConstructor.body !is FirLazyBlock) return
 
-        val newFunction = RawFirFragmentForLazyBodiesBuilder.build(
+        val newFunction = RawFirNonLocalDeclarationBuilder.build(
             session = secondaryConstructor.declarationSiteSession,
             baseScopeProvider = secondaryConstructor.declarationSiteSession.firIdeProvider.kotlinScopeProvider,
             designation = designation,
@@ -64,7 +63,7 @@ internal object FirLazyBodiesCalculator {
     fun calculateLazyBodyForProperty(firProperty: FirProperty, designation: List<FirDeclaration>) {
         if (!needCalculatingLazyBodyForProperty(firProperty)) return
 
-        val newProperty = RawFirFragmentForLazyBodiesBuilder.build(
+        val newProperty = RawFirNonLocalDeclarationBuilder.build(
             session = firProperty.declarationSiteSession,
             baseScopeProvider = firProperty.declarationSiteSession.firIdeProvider.kotlinScopeProvider,
             designation = designation,
