@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.idea.fir.low.level.api
 
 import com.intellij.openapi.project.Project
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.annotations.TestOnly
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
@@ -14,12 +15,16 @@ import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirFile
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.realPsi
+import org.jetbrains.kotlin.fir.toFirPsiSourceElement
+import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
+import org.jetbrains.kotlin.fir.types.toFirResolvedTypeRef
 import org.jetbrains.kotlin.idea.caches.project.IdeaModuleInfo
 import org.jetbrains.kotlin.idea.caches.project.ModuleSourceInfo
 import org.jetbrains.kotlin.idea.caches.project.getModuleInfo
 import org.jetbrains.kotlin.idea.fir.low.level.api.annotations.InternalForInline
 import org.jetbrains.kotlin.idea.fir.low.level.api.api.DiagnosticCheckerFilter
 import org.jetbrains.kotlin.idea.fir.low.level.api.api.FirModuleResolveState
+import org.jetbrains.kotlin.idea.fir.low.level.api.api.LowLevelFirApiFacadeForResolveOnAir
 import org.jetbrains.kotlin.idea.fir.low.level.api.diagnostics.DiagnosticsCollector
 import org.jetbrains.kotlin.idea.fir.low.level.api.element.builder.FirElementBuilder
 import org.jetbrains.kotlin.idea.fir.low.level.api.element.builder.getNonLocalContainingOrThisDeclaration
@@ -34,6 +39,7 @@ import org.jetbrains.kotlin.idea.fir.low.level.api.util.FirElementFinder
 import org.jetbrains.kotlin.idea.fir.low.level.api.util.findSourceNonLocalFirDeclaration
 import org.jetbrains.kotlin.idea.util.getElementTextInContext
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 
 internal class FirModuleResolveStateImpl(
     override val project: Project,
@@ -43,6 +49,7 @@ internal class FirModuleResolveStateImpl(
     val firLazyDeclarationResolver: FirLazyDeclarationResolver,
 ) : FirModuleResolveState() {
     override val rootModuleSession: FirIdeSourcesSession get() = sessionProvider.rootModuleSession
+
 
     /**
      * WARNING! This object contains scopes for all statements and declarations that were ever resolved.
@@ -58,7 +65,7 @@ internal class FirModuleResolveStateImpl(
         sessionProvider.getSession(moduleInfo)!!
 
     override fun getOrBuildFirFor(element: KtElement): FirElement =
-        elementBuilder.getOrBuildFirFor(element, firFileBuilder, rootModuleSession.cache, fileStructureCache)
+        elementBuilder.getOrBuildFirFor(element, firFileBuilder, rootModuleSession.cache, fileStructureCache, this)
 
     override fun getOrBuildFirFile(ktFile: KtFile): FirFile =
         firFileBuilder.buildRawFirFileWithCaching(ktFile, rootModuleSession.cache, lazyBodiesMode = false)
