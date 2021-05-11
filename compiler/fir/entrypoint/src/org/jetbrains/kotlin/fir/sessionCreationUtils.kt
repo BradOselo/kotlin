@@ -29,7 +29,7 @@ inline fun createSessionWithDependencies(
     librariesScope: GlobalSearchScope,
     lookupTracker: LookupTracker?,
     getPackagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
-    getProviderAndScopeForIncrementalCompilation: (GlobalSearchScope) -> FirSessionFactory.ProviderAndScopeForIncrementalCompilation?,
+    getProviderAndScopeForIncrementalCompilation: () -> FirSessionFactory.ProviderAndScopeForIncrementalCompilation?,
     dependenciesConfigurator: DependencyListForCliModule.Builder.() -> Unit = {},
     noinline sessionConfigurator: FirSessionFactory.FirSessionConfigurator.() -> Unit = {},
 ): FirSession {
@@ -61,7 +61,7 @@ inline fun createSessionWithDependencies(
     librariesScope: GlobalSearchScope,
     lookupTracker: LookupTracker?,
     getPackagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
-    getProviderAndScopeForIncrementalCompilation: (GlobalSearchScope) -> FirSessionFactory.ProviderAndScopeForIncrementalCompilation?,
+    getProviderAndScopeForIncrementalCompilation: () -> FirSessionFactory.ProviderAndScopeForIncrementalCompilation?,
     noinline sessionConfigurator: FirSessionFactory.FirSessionConfigurator.() -> Unit = {},
 ): FirSession {
     val moduleName = Name.identifier(module.getModuleName())
@@ -99,7 +99,7 @@ inline fun createSessionWithDependenciesImpl(
     librariesScope: GlobalSearchScope,
     lookupTracker: LookupTracker?,
     getPackagePartProvider: (GlobalSearchScope) -> PackagePartProvider,
-    getProviderAndScopeForIncrementalCompilation: (GlobalSearchScope) -> FirSessionFactory.ProviderAndScopeForIncrementalCompilation?,
+    getProviderAndScopeForIncrementalCompilation: () -> FirSessionFactory.ProviderAndScopeForIncrementalCompilation?,
     noinline sessionConfigurator: FirSessionFactory.FirSessionConfigurator.() -> Unit,
 ): FirSession {
     val sessionProvider = externalSessionProvider ?: FirProjectSessionProvider()
@@ -125,7 +125,7 @@ inline fun createSessionWithDependenciesImpl(
         sessionProvider,
         sourceScope,
         project,
-        providerAndScopeForIncrementalCompilation = getProviderAndScopeForIncrementalCompilation(librariesScope),
+        providerAndScopeForIncrementalCompilation = getProviderAndScopeForIncrementalCompilation(),
         languageVersionSettings = languageVersionSettings,
         lookupTracker = lookupTracker,
         init = sessionConfigurator

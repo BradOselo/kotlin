@@ -349,13 +349,13 @@ object KotlinToJVMBytecodeCompiler {
                 librariesScope,
                 lookupTracker = environment.configuration.get(CommonConfigurationKeys.LOOKUP_TRACKER),
                 getPackagePartProvider = { environment.createPackagePartProvider(it) },
-                getProviderAndScopeForIncrementalCompilation = get@{ scope ->
+                getProviderAndScopeForIncrementalCompilation = get@{
                     if (targetIds == null || incrementalComponents == null) return@get null
                     val packagePartProvider = IncrementalPackagePartProvider(
-                        environment.createPackagePartProvider(scope),
+                        environment.createPackagePartProvider(sourceScope),
                         targetIds.map(incrementalComponents::getIncrementalCache)
                     )
-                    FirSessionFactory.ProviderAndScopeForIncrementalCompilation(packagePartProvider, scope)
+                    FirSessionFactory.ProviderAndScopeForIncrementalCompilation(packagePartProvider, librariesScope)
                 },
                 sessionConfigurator = {
                     if (extendedAnalysisMode) {
