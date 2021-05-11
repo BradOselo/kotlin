@@ -125,7 +125,7 @@ inline fun createSessionWithDependenciesImpl(
         sessionProvider,
         sourceScope,
         project,
-        providerAndScopeForIncrementalCompilation = getProviderAndScopeForIncrementalCompilation(sourceScope),
+        providerAndScopeForIncrementalCompilation = getProviderAndScopeForIncrementalCompilation(librariesScope),
         languageVersionSettings = languageVersionSettings,
         lookupTracker = lookupTracker,
         init = sessionConfigurator
