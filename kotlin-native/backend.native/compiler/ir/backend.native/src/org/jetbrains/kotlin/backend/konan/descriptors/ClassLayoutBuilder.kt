@@ -346,13 +346,8 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context, va
         return index
     }
 
-    val itableEntries: List<OverriddenFunctionInfo> by lazy {
-        require(!irClass.isInterface)
-        irClass.overridableOrOverridingMethods
-                .flatMap { method -> method.allOverriddenFunctions.map { OverriddenFunctionInfo(method, it) } }
-                .filter { it.canBeCalledVirtually }
-                .sortedBy { it.overriddenFunction.uniqueName }
-    }
+    fun overridingOf(function: IrSimpleFunction) =
+            irClass.overridableOrOverridingMethods.firstOrNull { function in it.allOverriddenFunctions }
 
     val interfaceVTableEntries: List<IrSimpleFunction> by lazy {
         require(irClass.isInterface)
@@ -373,7 +368,7 @@ internal class ClassLayoutBuilder(val irClass: IrClass, val context: Context, va
             if (context.ghaEnabled()) {
                 hierarchyInfo.interfaceId
             } else {
-                irClass.fqNameForIrSerialization.asString().localHash.value.toInt()
+                localHash(irClass.fqNameForIrSerialization.asString().toByteArray()).toInt()
             }
         }
         else -> {

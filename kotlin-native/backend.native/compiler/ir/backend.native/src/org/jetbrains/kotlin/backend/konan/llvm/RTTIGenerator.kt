@@ -305,10 +305,7 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
 
     private fun interfaceTableSkeleton(interfaces: List<IrClass>): Pair<Array<out ClassLayoutBuilder?>, Int> {
         val interfaceLayouts = interfaces.map { context.getLayoutBuilder(it) }
-        if (!context.ghaEnabled())
-            return Pair(interfaceLayouts.sortedBy { it.classId }.toTypedArray(), -interfaces.size)
-
-        val interfaceColors = interfaceLayouts.map { it.hierarchyInfo.interfaceColor }
+        val interfaceIds = interfaceLayouts.map { it.classId }
 
         // Find the optimal size. It must be a power of 2.
         var size = 1
@@ -319,8 +316,8 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
                 used[i] = false
             // Check for collisions.
             var ok = true
-            for (color in interfaceColors) {
-                val index = color % size
+            for (id in interfaceIds) {
+                val index = id and (size - 1) // This is not an optimization but rather for not to bother with negative numbers.
                 if (used[index]) {
                     ok = false
                     break
@@ -330,17 +327,25 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
             if (ok) break
             size *= 2
         }
-        val conservative = size > maxSize
+        val useFastITable = size <= maxSize
 
-        val interfaceTableSkeleton = if (conservative) {
+        val interfaceTableSkeleton = if (useFastITable) {
+            arrayOfNulls<ClassLayoutBuilder?>(size).also {
+                for (interfaceLayout in interfaceLayouts)
+                    it[interfaceLayout.classId and (size - 1)] = interfaceLayout
+            }
+        } else {
             size = interfaceLayouts.size
-            interfaceLayouts.sortedBy { it.hierarchyInfo.interfaceId }.toTypedArray()
-        } else arrayOfNulls<ClassLayoutBuilder?>(size).also {
-            for (interfaceLayout in interfaceLayouts)
-                it[interfaceLayout.hierarchyInfo.interfaceId % size] = interfaceLayout
+            val sortedInterfaceLayouts = interfaceLayouts.sortedBy { it.classId }.toTypedArray()
+            for (i in 1 until sortedInterfaceLayouts.size)
+                require(sortedInterfaceLayouts[i - 1].classId != sortedInterfaceLayouts[i].classId) {
+                    "Different interfaces ${sortedInterfaceLayouts[i - 1].irClass.render()} and ${sortedInterfaceLayouts[i].irClass.render()}" +
+                            " have same class id: ${sortedInterfaceLayouts[i].classId}"
+                }
+            sortedInterfaceLayouts
         }
 
-        val interfaceTableSize = if (conservative) -size else (size - 1)
+        val interfaceTableSize = if (useFastITable) (size - 1) else -size
         return Pair(interfaceTableSkeleton, interfaceTableSize)
     }
 
@@ -348,7 +353,7 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
             irClass: IrClass,
             interfaceTableSkeleton: Array<out ClassLayoutBuilder?>
     ): List<InterfaceTableRecord> {
-        val methodTableEntries = context.getLayoutBuilder(irClass).itableEntries
+        val layoutBuilder = context.getLayoutBuilder(irClass)
         val className = irClass.fqNameForIrSerialization
 
         return interfaceTableSkeleton.map { iface ->
@@ -360,10 +365,9 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
                         NullPointer(kInt8Ptr)
                     else {
                         val vtableEntries = iface.interfaceVTableEntries.map { ifaceFunction ->
-                            val impl = OverriddenFunctionInfo(
-                                    methodTableEntries.first { ifaceFunction in it.function.allOverriddenFunctions }.function,
-                                    ifaceFunction
-                            ).implementation
+                            val impl = layoutBuilder.overridingOf(ifaceFunction)?.let {
+                                OverriddenFunctionInfo(it, ifaceFunction).implementation
+                            }
                             if (impl == null || context.referencedFunctions?.contains(impl) == false)
                                 NullPointer(int8Type)
                             else impl.entryPointAddress

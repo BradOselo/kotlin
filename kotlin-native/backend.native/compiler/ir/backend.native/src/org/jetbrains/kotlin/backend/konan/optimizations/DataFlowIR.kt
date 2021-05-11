@@ -506,16 +506,13 @@ internal object DataFlowIR {
                 type.vtable += layoutBuilder.vtableEntries.map {
                     mapFunction(it.getImplementation(context)!!)
                 }
-                val methods = layoutBuilder.itableEntries
                 val interfaces = irClass.implementedInterfaces.map { context.getLayoutBuilder(it) }
                 for (iface in interfaces) {
                     val ifaceItable = iface.interfaceVTableEntries
                     type.itable[iface.classId] = ifaceItable.map { ifaceFunction ->
                         mapFunction(
-                                OverriddenFunctionInfo(
-                                        methods.first { ifaceFunction in it.function.allOverriddenFunctions }.function,
-                                        ifaceFunction
-                                ).getImplementation(context)!!
+                                OverriddenFunctionInfo(layoutBuilder.overridingOf(ifaceFunction)!!, ifaceFunction)
+                                        .getImplementation(context)!!
                         )
                     }
                 }
