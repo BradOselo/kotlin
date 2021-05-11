@@ -80,7 +80,7 @@ interface ClassicTypeSystemContext : TypeSystemInferenceExtensionContext, TypeSy
 
     override fun SimpleTypeMarker.isStubType(): Boolean {
         require(this is SimpleType, this::errorMessage)
-        return this is StubType || this is StubTypeForProvideDelegateReceiver
+        return this is StubTypeForBuilderInference || this is StubTypeForProvideDelegateReceiver
     }
 
     override fun SimpleTypeMarker.isStubTypeForVariableInSubtyping(): Boolean {
@@ -548,7 +548,7 @@ interface ClassicTypeSystemContext : TypeSystemInferenceExtensionContext, TypeSy
         errorSupportedOnlyInTypeInference()
     }
 
-    override fun createStubType(typeVariable: TypeVariableMarker): StubTypeMarker {
+    override fun createStubTypeForBuilderInference(typeVariable: TypeVariableMarker): StubTypeMarker {
         errorSupportedOnlyInTypeInference()
     }
 
