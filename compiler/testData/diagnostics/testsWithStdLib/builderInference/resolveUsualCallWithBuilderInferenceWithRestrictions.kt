@@ -1,27 +1,34 @@
-// !LANGUAGE: -ExperimentalBuilderInference
 // !DIAGNOSTICS: -UNUSED_PARAMETER
 // !WITH_NEW_INFERENCE
+// FILE: annotation.kt
+
+package kotlin
+
+annotation class BuilderInference
+
+// FILE: test.kt
 
 class Builder<T> {
-    suspend fun add(t: T) {}
+    fun add(t: T) {}
 }
 
-fun <S> build(g: suspend Builder<S>.() -> Unit): List<S> = TODO()
+fun <S> build(@BuilderInference g: Builder<S>.() -> Unit): List<S> = TODO()
 fun <S> wrongBuild(g: Builder<S>.() -> Unit): List<S> = TODO()
 
 fun <S> Builder<S>.extensionAdd(s: S) {}
 
-suspend fun <S> Builder<S>.safeExtensionAdd(s: S) {}
+@BuilderInference
+fun <S> Builder<S>.safeExtensionAdd(s: S) {}
 
 val member = build {
     add(42)
 }
 
 val memberWithoutAnn = <!NEW_INFERENCE_NO_INFORMATION_FOR_PARAMETER{NI}, TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>wrongBuild<!> {
-    <!ILLEGAL_SUSPEND_FUNCTION_CALL!>add<!>(42)
+    add(42)
 }
 
-val extension = <!TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>build<!> {
+val extension = <!NEW_INFERENCE_NO_INFORMATION_FOR_PARAMETER, TYPE_INFERENCE_NO_INFORMATION_FOR_PARAMETER{OI}!>build<!> {
     extensionAdd("foo")
 }
 
