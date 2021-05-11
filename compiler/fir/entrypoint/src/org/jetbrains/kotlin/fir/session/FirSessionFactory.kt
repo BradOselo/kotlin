@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElementFinder
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.kotlin.analyzer.common.CommonPlatformAnalyzerServices
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.fir.*
@@ -37,7 +38,9 @@ import org.jetbrains.kotlin.load.kotlin.PackagePartProvider
 import org.jetbrains.kotlin.load.kotlin.VirtualFileFinderFactory
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.TargetPlatform
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.resolve.PlatformDependentAnalyzerServices
+import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
 
 @OptIn(PrivateSessionConstructor::class, SessionConfiguration::class)
 object FirSessionFactory {
@@ -216,7 +219,18 @@ object FirSessionFactory {
 
     @TestOnly
     fun createEmptySession(): FirSession {
-        return object : FirSession(null) {}
+        return object : FirSession(null) {}.apply {
+            val moduleData = FirModuleDataImpl(
+                Name.identifier("<stub module>"),
+                dependencies = emptyList(),
+                dependsOnDependencies = emptyList(),
+                friendDependencies = emptyList(),
+                platform = JvmPlatforms.unspecifiedJvmPlatform,
+                analyzerServices = JvmPlatformAnalyzerServices
+            )
+            registerModuleData(moduleData)
+            moduleData.bindSession(this)
+        }
     }
 
     fun createModuleDataForBuiltins(
