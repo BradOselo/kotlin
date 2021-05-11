@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.idea.fir.low.level.api.lazy.resolve
 
 import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
 import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.fir.expressions.FirAnnotationCall
 import org.jetbrains.kotlin.fir.psi
 import org.jetbrains.kotlin.fir.render
 import org.jetbrains.kotlin.fir.resolve.ResolutionMode
@@ -37,10 +38,20 @@ internal class FirLazyDeclarationResolver(
      */
     fun resolveFileAnnotations(
         firFile: FirFile,
+        annotations: List<FirAnnotationCall>,
         moduleFileCache: ModuleFileCache,
         scopeSession: ScopeSession,
-    ) = firFileBuilder.runCustomResolveUnderLock(firFile, moduleFileCache) {
-        resolveFileAnnotationsWithoutLock(firFile, scopeSession)
+    ) {
+        lazyResolveDeclaration(
+            declaration = firFile,
+            moduleFileCache = moduleFileCache,
+            toPhase = FirResolvePhase.IMPORTS,
+            checkPCE = false,
+            reresolveFile = false
+        )
+        firFileBuilder.runCustomResolveUnderLock(firFile, moduleFileCache) {
+            resolveFileAnnotationsWithoutLock(firFile, annotations, scopeSession)
+        }
     }
 
     /**
@@ -49,11 +60,15 @@ internal class FirLazyDeclarationResolver(
      */
     private fun resolveFileAnnotationsWithoutLock(
         firFile: FirFile,
+        annotations: List<FirAnnotationCall>,
         scopeSession: ScopeSession,
     ) {
-        check(firFile.resolvePhase >= FirResolvePhase.IMPORTS)
-        val transformer = FirFileAnnotationsResolveTransformer(firFile.declarationSiteSession, scopeSession)
-        firFile.accept(transformer, ResolutionMode.ContextDependent)
+        FirFileAnnotationsResolveTransformer(
+            firFile = firFile,
+            annotations = annotations,
+            session = firFile.declarationSiteSession,
+            scopeSession = scopeSession
+        ).transformDeclaration()
     }
 
     private fun getResolvableDeclaration(declaration: FirDeclaration, moduleFileCache: ModuleFileCache): FirDeclaration {
@@ -176,7 +191,7 @@ internal class FirLazyDeclarationResolver(
             )
         }
         if (toPhase <= nonLazyPhase) return
-        resolveFileAnnotationsWithoutLock(containerFirFile, scopeSession)
+        resolveFileAnnotationsWithoutLock(containerFirFile, containerFirFile.annotations, scopeSession)
 
         runLazyDesignatedResolveWithoutLock(
             firDeclarationToResolve = firDeclarationToResolve,
