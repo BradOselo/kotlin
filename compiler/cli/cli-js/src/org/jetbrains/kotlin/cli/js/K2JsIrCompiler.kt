@@ -279,6 +279,7 @@ class K2JsIrCompiler : CLICompiler<K2JSCompilerArguments>() {
                 focusOnTest = arguments.irFocusOnTest,
                 forceAllJs = arguments.irForceAllJs,
                 legacyPropertyAccess = arguments.irLegacyPropertyAccess,
+                baseClassIntoMetadata = arguments.irBaseClassInMetadata,
             )
 
             val jsCode = if (arguments.irDce && !arguments.irDceDriven) compiledModule.dceJsCode!! else compiledModule.jsCode!!
