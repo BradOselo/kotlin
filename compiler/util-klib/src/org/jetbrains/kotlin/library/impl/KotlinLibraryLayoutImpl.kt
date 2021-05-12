@@ -3,8 +3,10 @@ package org.jetbrains.kotlin.library.impl
 import org.jetbrains.kotlin.konan.file.File
 import org.jetbrains.kotlin.konan.file.file
 import org.jetbrains.kotlin.konan.file.withZipFileSystem
+import org.jetbrains.kotlin.konan.file.zipFileSystem
 import org.jetbrains.kotlin.library.*
 import org.jetbrains.kotlin.util.removeSuffixIfPresent
+import java.io.Closeable
 import java.nio.file.FileSystem
 
 open class KotlinLibraryLayoutImpl(val klib: File, override val component: String?) : KotlinLibraryLayout {
@@ -53,8 +55,15 @@ class IrLibraryLayoutImpl(klib: File, component: String) : KotlinLibraryLayoutIm
 }
 
 @Suppress("UNCHECKED_CAST")
-open class BaseLibraryAccess<L : KotlinLibraryLayout>(val klib: File, component: String?) {
+open class BaseLibraryAccess<L : KotlinLibraryLayout>(val klib: File, component: String?) : Closeable {
     open val layout = KotlinLibraryLayoutImpl(klib, component)
+    private val zipFileSystem: FileSystem? by lazy {
+        if (layout.isZipped) {
+            layout.klib.zipFileSystem(false)
+        } else {
+            null
+        }
+    }
 
     fun <T> realFiles(action: (L) -> T): T =
         if (layout.isZipped)
@@ -64,11 +73,15 @@ open class BaseLibraryAccess<L : KotlinLibraryLayout>(val klib: File, component:
 
     fun <T> inPlace(action: (L) -> T): T =
         if (layout.isZipped)
-            layout.klib.withZipFileSystem { zipFileSystem ->
-                action(layout.directlyFromZip(zipFileSystem) as L)
-            }
+            action(layout.directlyFromZip(zipFileSystem!!) as L)
         else
             action(layout as L)
+
+    override fun close() {
+        if (layout.isZipped) {
+            zipFileSystem?.close()
+        }
+    }
 }
 
 
