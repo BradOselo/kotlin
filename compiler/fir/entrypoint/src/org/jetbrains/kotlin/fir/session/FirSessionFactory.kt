@@ -45,8 +45,7 @@ import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
 @OptIn(PrivateSessionConstructor::class, SessionConfiguration::class)
 object FirSessionFactory {
     class FirSessionConfigurator(private val session: FirSession) {
-        @Suppress("RemoveExplicitTypeArguments")
-        private val registeredExtensions = mutableListOf<BunchOfRegisteredExtensions>(BunchOfRegisteredExtensions.empty())
+        private val registeredExtensions: MutableList<BunchOfRegisteredExtensions> = mutableListOf(BunchOfRegisteredExtensions.empty())
 
         fun registerExtensions(extensions: BunchOfRegisteredExtensions) {
             registeredExtensions += extensions
