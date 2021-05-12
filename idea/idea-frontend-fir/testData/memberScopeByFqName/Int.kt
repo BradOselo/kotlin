@@ -1306,6 +1306,20 @@ KtFirNamedClassOrObjectSymbol:
   visibility: Public
 
 KtFirConstructorSymbol:
+  annotatedType: [] java/lang/Integer
+  annotationClassIds: []
+  annotations: []
+  callableIdIfNonLocal: null
+  containingClassIdIfNonLocal: java/lang/Integer
+  dispatchType: null
+  isPrimary: false
+  origin: JAVA
+  symbolKind: MEMBER
+  typeParameters: []
+  valueParameters: [KtFirValueParameterSymbol(value)]
+  visibility: Public
+
+KtFirConstructorSymbol:
   annotatedType: [] kotlin/Int
   annotationClassIds: []
   annotations: []
