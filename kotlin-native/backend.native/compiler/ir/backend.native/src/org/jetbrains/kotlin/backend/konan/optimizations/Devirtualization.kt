@@ -79,7 +79,7 @@ internal object Devirtualization {
                     } +
                             moduleDFG.symbolTable.classMap.values
                                     .filterIsInstance<DataFlowIR.Type.Declared>()
-                                    .flatMap { it.vtable + it.itable.values }
+                                    .flatMap { it.vtable + it.itable.values.flatten() }
                                     .filterIsInstance<DataFlowIR.FunctionSymbol.Declared>()
                                     .filter { moduleDFG.functions.containsKey(it) }
                 }
