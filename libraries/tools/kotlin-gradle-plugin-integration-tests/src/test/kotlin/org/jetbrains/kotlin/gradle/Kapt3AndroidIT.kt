@@ -76,7 +76,7 @@ class Kapt3Android70IT : Kapt3AndroidIT() {
         get() = AGPVersion.v7_0_0
 
     override val defaultGradleVersion: GradleVersionRequired
-        get() = GradleVersionRequired.AtLeast("6.8")
+        get() = GradleVersionRequired.AtLeast("7.0")
 
     override fun defaultBuildOptions(): BuildOptions {
         val javaHome = File(System.getProperty("jdk11Home")!!)
