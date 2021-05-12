@@ -14,9 +14,18 @@ import org.jetbrains.kotlin.resolve.PlatformDependentAnalyzerServices
 class FirModuleInfoBasedModuleData(val moduleInfo: ModuleInfo) : FirModuleData() {
     override val name: Name
         get() = moduleInfo.name
-    override val dependencies: List<FirModuleData> = moduleInfo.dependencies().map { FirModuleInfoBasedModuleData(it) }
-    override val dependsOnDependencies: List<FirModuleData> = moduleInfo.expectedBy.map { FirModuleInfoBasedModuleData(it) }
-    override val friendDependencies: List<FirModuleData> = moduleInfo.modulesWhoseInternalsAreVisible().map { FirModuleInfoBasedModuleData(it) }
+    override val dependencies: List<FirModuleData> = moduleInfo.dependencies()
+        .filterNot { it == moduleInfo }
+        .map { FirModuleInfoBasedModuleData(it) }
+
+    override val dependsOnDependencies: List<FirModuleData> = moduleInfo.expectedBy
+        .filterNot { it == moduleInfo }
+        .map { FirModuleInfoBasedModuleData(it) }
+
+    override val friendDependencies: List<FirModuleData> = moduleInfo.modulesWhoseInternalsAreVisible()
+        .filterNot { it == moduleInfo }
+        .map { FirModuleInfoBasedModuleData(it) }
+
     override val platform: TargetPlatform
         get() = moduleInfo.platform
 
