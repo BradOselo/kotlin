@@ -6,6 +6,8 @@
 package org.jetbrains.kotlin.idea.fir.low.level.api.sessions
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.OrderRootType
+import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
 import org.jetbrains.kotlin.fir.*
@@ -13,7 +15,6 @@ import org.jetbrains.kotlin.fir.backend.jvm.FirJvmTypeMapper
 import org.jetbrains.kotlin.fir.caches.FirCachesFactory
 import org.jetbrains.kotlin.fir.checkers.registerExtendedCommonCheckers
 import org.jetbrains.kotlin.fir.declarations.SealedClassInheritorsProvider
-import org.jetbrains.kotlin.fir.deserialization.SingleModuleDataProvider
 import org.jetbrains.kotlin.fir.java.JavaSymbolProvider
 import org.jetbrains.kotlin.fir.java.deserialization.KotlinDeserializedJvmSymbolsProvider
 import org.jetbrains.kotlin.fir.resolve.providers.FirProvider
@@ -45,6 +46,8 @@ import org.jetbrains.kotlin.load.kotlin.VirtualFileFinderFactory
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatformAnalyzerServices
+import java.nio.file.Path
+import java.nio.file.Paths
 
 @OptIn(PrivateSessionConstructor::class, SessionConfiguration::class)
 internal object FirIdeSessionFactory {
@@ -151,16 +154,16 @@ internal object FirIdeSessionFactory {
     }
 
     fun createLibrarySession(
-        moduleInfo: ModuleSourceInfo,
+        mainModuleInfo: ModuleSourceInfo,
         project: Project,
         builtinsAndCloneableSession: FirIdeBuiltinsAndCloneableSession,
         builtinTypes: BuiltinTypes,
         librariesCache: LibrariesCache,
         languageVersionSettings: LanguageVersionSettings = LanguageVersionSettingsImpl.DEFAULT,
         configureSession: (FirIdeSession.() -> Unit)?,
-    ): FirIdeLibrariesSession = librariesCache.cached(moduleInfo) {
+    ): FirIdeLibrariesSession = librariesCache.cached(mainModuleInfo) {
         checkCanceled()
-        val searchScope = ModuleLibrariesSearchScope(moduleInfo.module)
+        val searchScope = ModuleLibrariesSearchScope(mainModuleInfo.module)
         val javaClassFinder = JavaClassFinderImpl().apply {
             setProjectInstance(project)
             setScope(searchScope)
@@ -169,16 +172,28 @@ internal object FirIdeSessionFactory {
 
         val kotlinClassFinder = VirtualFileFinderFactory.getInstance(project).create(searchScope)
         FirIdeLibrariesSession(project, searchScope, builtinTypes).apply session@{
-            val moduleData = FirModuleInfoBasedModuleData(moduleInfo).apply { bindSession(this@session) }
+            val mainModuleData = FirModuleInfoBasedModuleData(mainModuleInfo).apply { bindSession(this@session) }
 
             registerIdeComponents()
             register(FirPhaseManager::class, FirPhaseCheckingPhaseManager)
             registerCommonComponents(languageVersionSettings)
             registerJavaSpecificResolveComponents()
 
-            val javaSymbolProvider = JavaSymbolProvider(this, moduleData, project, searchScope)
+            val javaSymbolProvider = JavaSymbolProvider(this, mainModuleData, project, searchScope)
 
             val kotlinScopeProvider = FirKotlinScopeProvider(::wrapScopeWithJvmMapped)
+
+            val moduleDataProvider = DependencyListForCliModule.build(
+                mainModuleInfo.name,
+                mainModuleInfo.platform,
+                mainModuleInfo.analyzerServices
+            ) {
+                dependencies(mainModuleInfo.dependenciesWithoutSelf().extractLibraryPaths())
+                friendDependencies(mainModuleInfo.modulesWhoseInternalsAreVisible().extractLibraryPaths())
+                dependsOnDependencies(mainModuleInfo.expectedBy.extractLibraryPaths())
+            }.moduleDataProvider
+
+            moduleDataProvider.allModuleData.forEach { it.bindSession(this@session) }
 
             val symbolProvider = FirCompositeSymbolProvider(
                 this,
@@ -188,7 +203,7 @@ internal object FirIdeSessionFactory {
                         FirThreadSafeSymbolProviderWrapper(
                             KotlinDeserializedJvmSymbolsProvider(
                                 this@session,
-                                SingleModuleDataProvider(moduleData),
+                                moduleDataProvider,
                                 kotlinScopeProvider,
                                 packagePartProvider,
                                 kotlinClassFinder,
@@ -207,6 +222,36 @@ internal object FirIdeSessionFactory {
             configureSession?.invoke(this)
         }
     }
+
+    private fun Sequence<ModuleInfo>.extractLibraryPaths(): List<Path> {
+        return fold(mutableListOf()) { acc, moduleInfo ->
+            moduleInfo.extractLibraryPaths(acc)
+            acc
+        }
+    }
+
+    private fun Iterable<ModuleInfo>.extractLibraryPaths(): List<Path> {
+        return fold(mutableListOf()) { acc, moduleInfo ->
+            moduleInfo.extractLibraryPaths(acc)
+            acc
+        }
+    }
+
+    private fun ModuleInfo.extractLibraryPaths(destination: MutableList<Path>) {
+        when (this) {
+            is SdkInfo -> {
+                sdk.rootProvider.getFiles(OrderRootType.CLASSES).mapNotNullTo(destination) {
+                    Paths.get(it.fileSystem.extractPresentableUrl(it.path)).normalize()
+                }
+            }
+            is LibraryInfo -> {
+                getLibraryRoots().mapTo(destination) {
+                    Paths.get(it).normalize()
+                }
+            }
+        }
+    }
+
 
     fun createBuiltinsAndCloneableSession(
         project: Project,
