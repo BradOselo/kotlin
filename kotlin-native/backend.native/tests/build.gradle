@@ -4745,7 +4745,7 @@ Task frameworkTest(String name, Closure<FrameworkTest> configurator) {
 
 if (isAppleTarget(project)) {
     frameworkTest('testObjCExport') {
-        enabled = !isExperimentalMM // Experimental MM doesn't support ObjC blocks and thread state switching for ObjC interop yet.
+        enabled = !isExperimentalMM // Experimental MM does not support Obj-C weaks and thread state switching for ObjC interop yet.
         final String frameworkName = 'Kt'
         final String dir = "$testOutputFramework/testObjCExport"
         final File lazyHeader = file("$dir/$target-lazy.h")
@@ -4794,7 +4794,7 @@ if (isAppleTarget(project)) {
     }
 
     frameworkTest('testObjCExportNoGenerics') {
-        enabled = !isExperimentalMM // Experimental MM doesn't support ObjC blocks and thread state switching for ObjC interop yet.
+        enabled = !isExperimentalMM // Experimental MM does not support Obj-C weaks and thread state switching for ObjC interop yet.
         final String frameworkName = 'KtNoGenerics'
         final String frameworkArtifactName = 'Kt'
         final String dir = "$testOutputFramework/testObjCExportNoGenerics"
@@ -4847,7 +4847,7 @@ if (isAppleTarget(project)) {
     }
 
     frameworkTest('testObjCExportStatic') {
-        enabled = !isExperimentalMM // Experimental MM doesn't support ObjC blocks and thread state switching for ObjC interop yet.
+        enabled = !isExperimentalMM // Experimental MM does not support Obj-C weaks and thread state switching for ObjC interop yet.
         final String frameworkName = 'KtStatic'
         final String frameworkArtifactName = 'Kt'
         final String libraryName = frameworkName + "Library"

@@ -417,6 +417,12 @@ extern "C" void EnsureNeverFrozen(ObjHeader* obj) {
     }
 }
 
+extern "C" ForeignRefContext InitLocalForeignRef(ObjHeader* object) {
+    // TODO: Remove when legacy MM is gone.
+    // Nothing to do.
+    return nullptr;
+}
+
 extern "C" ForeignRefContext InitForeignRef(ObjHeader* object) {
     auto* threadData = mm::ThreadRegistry::Instance().CurrentThreadData();
     auto* node = mm::StableRefRegistry::Instance().RegisterStableRef(threadData, object);
