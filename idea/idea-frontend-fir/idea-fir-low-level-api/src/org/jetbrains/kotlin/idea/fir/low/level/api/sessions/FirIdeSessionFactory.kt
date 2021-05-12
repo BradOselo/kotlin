@@ -216,7 +216,7 @@ internal object FirIdeSessionFactory {
     ): FirIdeBuiltinsAndCloneableSession {
         return FirIdeBuiltinsAndCloneableSession(project, builtinTypes).apply session@{
             val moduleData = FirModuleDataImpl(
-                Name.special("builtins module"),
+                Name.special("<builtins module>"),
                 emptyList(),
                 emptyList(),
                 emptyList(),
