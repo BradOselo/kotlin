@@ -430,6 +430,10 @@ extern "C" ForeignRefContext InitForeignRef(ObjHeader* object) {
 }
 
 extern "C" void DeinitForeignRef(ObjHeader* object, ForeignRefContext context) {
+    // If `context` was created by `InitLocalForeignRef`
+    if (context == nullptr)
+        return;
+
     auto* threadData = mm::ThreadRegistry::Instance().CurrentThreadData();
     auto* node = FromForeignRefManager(context);
     RuntimeAssert(object == **node, "Must correspond to the same object");
