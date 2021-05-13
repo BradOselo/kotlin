@@ -4,7 +4,7 @@
 
 import kotlin.coroutines.*
 
-var failure: String? = "FAIL"
+var failure: String? = "FAIL ILLEGAL STATE"
 
 class TopLevel1: suspend () -> Int {
     override suspend fun invoke(): Int {
@@ -36,7 +36,7 @@ class Outer {
     }
 }
 
-fun objectLiteral1(): Boolean {
+fun objectLiteral1(): String? {
     failure = "FAIL OBJECT LITERAL 1"
     val o1: suspend () -> Int = object : suspend () -> Int {
         override suspend fun invoke(): Int {
@@ -45,10 +45,10 @@ fun objectLiteral1(): Boolean {
         }
     }
     o1.startCoroutine(Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun objectLiteral2(): Boolean {
+fun objectLiteral2(): String? {
     failure = "FAIL OBJECT LITERAL 2"
     val o2: suspend (String) -> Int = object : suspend (String) -> Int {
         override suspend fun invoke(p: String): Int {
@@ -57,34 +57,34 @@ fun objectLiteral2(): Boolean {
         }
     }
     o2.startCoroutine("Hello", Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun topLevelClass1(): Boolean {
+fun topLevelClass1(): String? {
     failure = "FAIL TOP LEVEL CLASS 1"
     TopLevel1().startCoroutine(Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun topLevelClass2(): Boolean {
+fun topLevelClass2(): String? {
     failure = "FAIL TOP LEVEL CLASS 2"
     TopLevel2().startCoroutine("Hello", Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun nestedClass1(): Boolean {
+fun nestedClass1(): String? {
     failure = "FAIL NESTED CLASS 1"
     Outer.Nested1().startCoroutine(Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun nestedClass2(): Boolean {
+fun nestedClass2(): String? {
     failure = "FAIL NESTED CLASS 2"
     Outer.Nested2().startCoroutine("Hello", Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun localClass1(): Boolean {
+fun localClass1(): String? {
     failure = "FAIL LOCAL CLASS 1"
     class Local : suspend () -> Int {
         override suspend fun invoke(): Int {
@@ -93,12 +93,12 @@ fun localClass1(): Boolean {
         }
     }
     Local().startCoroutine(Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-    return failure != null
+    return failure
 }
 
-fun localClass2(): Boolean {
-    fun foo(): Boolean {
-        fun bar(): Boolean {
+fun localClass2(): String? {
+    fun foo(): String? {
+        fun bar(): String? {
             failure = "FAIL LOCAL CLASS 2"
             class Local : suspend (String) -> Int {
                 override suspend fun invoke(p: String): Int {
@@ -107,7 +107,7 @@ fun localClass2(): Boolean {
                 }
             }
             Local().startCoroutine("Hello", Continuation(EmptyCoroutineContext) { it.getOrThrow() })
-            return failure != null
+            return failure
         }
         return bar()
     }
@@ -115,10 +115,16 @@ fun localClass2(): Boolean {
 }
 
 fun box(): String {
-    objectLiteral1() && objectLiteral2()
-            && topLevelClass1() && topLevelClass2()
-            && nestedClass1() && nestedClass2()
-            && localClass1() && localClass2()
+    val failures = listOfNotNull(
+        objectLiteral1(),
+        objectLiteral2(),
+        topLevelClass1(),
+        topLevelClass2(),
+        nestedClass1(),
+        nestedClass2(),
+        localClass1(),
+        localClass2()
+    )
 
-    return failure ?: "OK"
+    return if (failures.isNotEmpty()) failures.joinToString("\n") else "OK"
 }
