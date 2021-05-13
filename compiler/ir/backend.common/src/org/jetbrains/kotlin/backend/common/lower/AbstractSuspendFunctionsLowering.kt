@@ -62,7 +62,9 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
 
     private fun addMissingSupertypesToSuspendFunctionImplementingClasses(irFile: IrFile) {
         irFile.acceptChildrenVoid(object : IrElementVisitorVoid {
-            override fun visitElement(element: IrElement) = Unit
+            override fun visitElement(element: IrElement) {
+                // Don't need to iterate through children. All local classes are already moved to the top level by this moment.
+            }
 
             override fun visitClass(declaration: IrClass) {
                 addMissingSupertypes(declaration)
