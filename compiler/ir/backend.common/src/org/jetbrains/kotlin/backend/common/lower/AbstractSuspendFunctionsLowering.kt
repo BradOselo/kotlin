@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.*
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val context: C) : FileLoweringPass {
@@ -78,15 +79,15 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
                 }
 
                 val suspendFunctionClassSymbol = suspendFunctionType?.classifierOrNull?.safeAs<IrClassSymbol>() ?: return
-                val suspendFunctionSymbol = suspendFunctionClassSymbol.getSimpleFunction("invoke")!!
+                val suspendFunctionSymbol = suspendFunctionClassSymbol.getSimpleFunction(OperatorNameConventions.INVOKE.asString())!!
 
                 val invokeFunction = clazz.findDeclaration<IrSimpleFunction> {
-                    it.name.asString() == "invoke" && suspendFunctionSymbol in it.overriddenSymbols
+                    it.name == OperatorNameConventions.INVOKE && suspendFunctionSymbol in it.overriddenSymbols
                 }!!
 
                 val suspendFunctionArity = suspendFunctionSymbol.owner.valueParameters.size
                 val functionClassSymbol = symbols.functionN(suspendFunctionArity + 1)
-                val functionSymbol = functionClassSymbol.getSimpleFunction("invoke")!!
+                val functionSymbol = functionClassSymbol.getSimpleFunction(OperatorNameConventions.INVOKE.asString())!!
 
                 invokeFunction.overriddenSymbols += functionSymbol
 
@@ -336,7 +337,7 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
         private val coroutineBaseClass = getCoroutineBaseClass(irFunction)
         private val coroutineBaseClassConstructor = coroutineBaseClass.owner.constructors.single { it.valueParameters.size == 1 }
         private val create1Function = coroutineBaseClass.owner.simpleFunctions()
-            .single { it.name.asString() == "create" && it.valueParameters.size == 1 }
+            .single { it.name == CREATE_IDENTIFIER && it.valueParameters.size == 1 }
         private val create1CompletionParameter = create1Function.valueParameters[0]
 
         private val coroutineConstructors = mutableListOf<IrConstructor>()
@@ -372,7 +373,7 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
                 coroutineFactoryConstructor = buildFactoryConstructor(boundFunctionParameters!!)
 
                 val createFunctionSymbol = coroutineBaseClass.owner.simpleFunctions()
-                    .atMostOne { it.name.asString() == "create" && it.valueParameters.size == unboundFunctionParameters!!.size + 1 }
+                    .atMostOne { it.name == CREATE_IDENTIFIER && it.valueParameters.size == unboundFunctionParameters!!.size + 1 }
                     ?.symbol
 
                 createMethod = buildCreateMethod(
@@ -382,9 +383,9 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
                 )
 
                 val invokeFunctionSymbol =
-                    functionClass!!.simpleFunctions().single { it.name.asString() == "invoke" }.symbol
+                    functionClass!!.simpleFunctions().single { it.name == OperatorNameConventions.INVOKE }.symbol
                 val suspendInvokeFunctionSymbol =
-                    suspendFunctionClass!!.simpleFunctions().single { it.name.asString() == "invoke" }.symbol
+                    suspendFunctionClass!!.simpleFunctions().single { it.name == OperatorNameConventions.INVOKE }.symbol
 
                 buildInvokeMethod(
                     suspendFunctionInvokeFunctionSymbol = suspendInvokeFunctionSymbol,
@@ -489,7 +490,7 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
             startOffset = irFunction.startOffset
             endOffset = irFunction.endOffset
             origin = DECLARATION_ORIGIN_COROUTINE_IMPL
-            name = Name.identifier("create")
+            name = CREATE_IDENTIFIER
             visibility = DescriptorVisibilities.PROTECTED
             returnType = coroutineClass.defaultType
         }.apply {
@@ -545,7 +546,7 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
             startOffset = irFunction.startOffset
             endOffset = irFunction.endOffset
             origin = DECLARATION_ORIGIN_COROUTINE_IMPL
-            name = Name.identifier("invoke")
+            name = OperatorNameConventions.INVOKE
             visibility = DescriptorVisibilities.PROTECTED
             returnType = context.irBuiltIns.anyNType
             isSuspend = true
@@ -670,5 +671,9 @@ abstract class AbstractSuspendFunctionsLowering<C : CommonBackendContext>(val co
             it.parent = this
             addChild(it)
         }
+    }
+
+    companion object {
+        private val CREATE_IDENTIFIER = Name.identifier("create")
     }
 }
