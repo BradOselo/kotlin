@@ -233,10 +233,6 @@ open class IrFileSerializer(
     private fun serializeScopeLocalSignature(signature: IdSignature.ScopeLocalDeclaration): Int = signature.id
 
     private fun serializeCompositeSignature(signature: IdSignature.CompositeSignature): ProtoCompositeSignature {
-        if (signature.toString() == "local  [  kotlin.text.regex/AbstractCharClass.Companion.CharClasses|null[0] <- local  Local[\$0,6804707858520539784 | FUN LOCAL_FUNCTION_FOR_LAMBDA name:<anonymous> visibility:local modality:FINAL <> () returnType:kotlin.text.regex.AbstractCharClass.CachedCharClass] ]") {
-            println("kjdf")
-        }
-
         val proto = ProtoCompositeSignature.newBuilder()
 
         proto.containerSig = protoIdSignature(signature.container)

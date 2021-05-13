@@ -93,14 +93,6 @@ open class DeclarationTable(globalTable: GlobalDeclarationTable) {
             override fun visitFunctionExpression(expression: IrFunctionExpression) {
                 scope.commitLambda(expression.function)
             }
-
-            override fun visitEnumEntry(declaration: IrEnumEntry) {
-                if (declaration.name.asString() == "BASIC_LATIN") {
-                    println("X")
-                }
-                super.visitEnumEntry(declaration)
-            }
-
         }
 
         override fun build(scope: SignatureScope<IrDeclaration>, element: IrElement?) {
@@ -108,8 +100,8 @@ open class DeclarationTable(globalTable: GlobalDeclarationTable) {
         }
     }
 
-    fun <R> inLocalScope(scopeOwner: IrElement, block: () -> R): R {
-        return signaturer.inLocalScope({ LocalScopeBuilder().build(it, scopeOwner) }, block)
+    fun <R> inLocalScope(scopeOwner: IrElement, parentSig: IdSignature? = null, block: () -> R): R {
+        return signaturer.inLocalScope({ LocalScopeBuilder().build(it, scopeOwner) }, parentSig, block)
     }
 
     private fun IrDeclaration.isLocalDeclaration(compatibleMode: Boolean): Boolean {
