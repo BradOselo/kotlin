@@ -77,14 +77,17 @@ open class IdSignatureSerializer(val mangler: KotlinMangler.IrMangler) : IdSigna
 
     }
 
-    override fun <R> inLocalScope(builder: (SignatureScope<IrDeclaration>) -> Unit, block: () -> R): R {
+    override fun <R> inLocalScope(builder: (SignatureScope<IrDeclaration>) -> Unit, parentSig: IdSignature?, block: () -> R): R {
         val newScope = LocalScope(localScope)
         localScope = newScope
+        val oldParentSig = preservedParentSig
+        preservedParentSig = parentSig
 
         builder(newScope)
 
         val result = block()
 
+        preservedParentSig = oldParentSig
         localScope = newScope.parent
 
         return result
@@ -93,6 +96,7 @@ open class IdSignatureSerializer(val mangler: KotlinMangler.IrMangler) : IdSigna
     private fun IrDeclaration.checkIfPlatformSpecificExport(): Boolean = mangler.run { isPlatformSpecificExport() }
 
     private var localScope: LocalScope? = null
+    private var preservedParentSig: IdSignature? = null
 
     private var localCounter: Long = 0
     private var scopeCounter: Int = 0
@@ -107,7 +111,7 @@ open class IdSignatureSerializer(val mangler: KotlinMangler.IrMangler) : IdSigna
         errorCounter = 0
     }
 
-    private inner class PublicIdSigBuilder : IdSignatureBuilder<IrDeclaration>(), IrElementVisitorVoid {
+    private inner class PublicIdSigBuilder(private val containerSig: IdSignature? = null) : IdSignatureBuilder<IrDeclaration>(), IrElementVisitorVoid {
 
         override val currentFileSignature: IdSignature.FileSignature?
             get() = currentFileSignatureX
@@ -115,6 +119,15 @@ open class IdSignatureSerializer(val mangler: KotlinMangler.IrMangler) : IdSigna
         override fun accept(d: IrDeclaration) {
             d.acceptVoid(this)
         }
+
+        override fun reset(resetContainer: Boolean) {
+            super.reset(resetContainer)
+            if (containerSig != null) container = containerSig
+        }
+
+//        init {
+//            container = containerSig
+//        }
 
         private fun createContainer() {
             container = container?.let {
@@ -251,8 +264,6 @@ open class IdSignatureSerializer(val mangler: KotlinMangler.IrMangler) : IdSigna
         }
     }
 
-    private val publicSignatureBuilder = PublicIdSigBuilder()
-
     private fun composeContainerIdSignature(container: IrDeclarationParent, compatibleMode: Boolean): IdSignature =
         when (container) {
             is IrPackageFragment -> IdSignature.PublicSignature(container.fqName.asString(), "", null, 0)
@@ -261,7 +272,7 @@ open class IdSignatureSerializer(val mangler: KotlinMangler.IrMangler) : IdSigna
         }
 
     fun composePublicIdSignature(declaration: IrDeclaration): IdSignature {
-        return publicSignatureBuilder.buildSignature(declaration)
+        return PublicIdSigBuilder(preservedParentSig).buildSignature(declaration)
     }
 
     fun composeFileLocalIdSignature(declaration: IrDeclaration, compatibleMode: Boolean): IdSignature {

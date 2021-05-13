@@ -138,10 +138,10 @@ open class IdSignatureDescriptor(private val mangler: KotlinMangler.DescriptorMa
             val actualDeclaration = if (descriptor is IrPropertyDelegateDescriptor) {
                 descriptor.correspondingProperty
             } else {
-                descriptor.also {
-                    isTopLevelPrivate = it.isTopLevelPrivate
-                }
+                descriptor
             }
+
+            isTopLevelPrivate = actualDeclaration.isTopLevelPrivate
 
             hashId = mangler.run { actualDeclaration.signatureMangle() }
             setExpected(actualDeclaration.isExpect)

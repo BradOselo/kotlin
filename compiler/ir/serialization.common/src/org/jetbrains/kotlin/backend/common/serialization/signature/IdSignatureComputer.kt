@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.ir.util.SignatureScope
 interface IdSignatureComputer {
     fun computeSignature(declaration: IrDeclaration): IdSignature
 
-    fun <R> inLocalScope(builder: (SignatureScope<IrDeclaration>) -> Unit, block: () -> R): R
+    fun <R> inLocalScope(builder: (SignatureScope<IrDeclaration>) -> Unit, parentSig: IdSignature? = null, block: () -> R): R
     fun inFile(file: IrFileSymbol?, block: () -> Unit)
 }
 
@@ -29,7 +29,7 @@ class DescToIrIdSignatureComputer(private val delegate: IdSignatureDescriptor) :
         delegate.inFile(file, block)
     }
 
-    override fun <R> inLocalScope(builder: (SignatureScope<IrDeclaration>) -> Unit, block: () -> R): R {
+    override fun <R> inLocalScope(builder: (SignatureScope<IrDeclaration>) -> Unit, parentSig: IdSignature?, block: () -> R): R {
 
         val builderBridge: (SignatureScope<DeclarationDescriptor>) -> Unit = {
             TODO("...")

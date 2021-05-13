@@ -36,7 +36,7 @@ abstract class IdSignatureBuilder<D> {
 
     protected abstract fun accept(d: D)
 
-    protected fun reset(resetContainer: Boolean = true) {
+    protected open fun reset(resetContainer: Boolean = true) {
         this.packageFqn = FqName.ROOT
         this.classFqnSegments.clear()
         this.hashId = null
@@ -52,7 +52,6 @@ abstract class IdSignatureBuilder<D> {
 
 
     protected fun buildContainerSignature(container: IdSignature): IdSignature.CompositeSignature {
-        assert(packageFqn.isRoot)
         val localName = classFqnSegments.joinToString(".")
         val localHash = hashId
         return IdSignature.CompositeSignature(container, IdSignature.LocalSignature(localName, localHash, description))

@@ -105,7 +105,9 @@ class FakeOverrideBuilder(
         fakeOverrideDeclarationTable.run {
             inFile(clazz.fileOrNull) {
                 if (clazz.visibility == DescriptorVisibilities.LOCAL) {
-                    inLocalScope(clazz.parent) {
+                    val parent = clazz.parent
+                    val parentSig = (parent as IrSymbolOwner).symbol.signature
+                    inLocalScope(parent, parentSig) {
                         irOverridingUtil.buildFakeOverridesForClass(clazz, compatibilityMode.oldSignatures)
                     }
                 } else irOverridingUtil.buildFakeOverridesForClass(clazz, compatibilityMode.oldSignatures)
