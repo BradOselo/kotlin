@@ -16,10 +16,7 @@ import org.jetbrains.kotlin.fir.types.coneType
 object FirAssignmentTypeMismatchChecker : FirVariableAssignmentChecker() {
     override fun check(expression: FirVariableAssignment, context: CheckerContext, reporter: DiagnosticReporter) {
         val source = expression.rValue.source ?: return
-        val lValueType =
-            ((expression.lValue as? FirResolvedNamedReference)?.resolvedSymbol as? FirPropertySymbol)?.fir?.returnTypeRef?.coneType
-                ?: return
-
-        checkTypeMismatch(lValueType, expression.rValue, context, source, reporter, false)
+        val coneType = expression.lValueTypeRef?.coneType ?: return
+        checkTypeMismatch(coneType, expression.rValue, context, source, reporter, false)
     }
 }
