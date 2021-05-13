@@ -325,12 +325,11 @@ extern "C" int64_t Kotlin_native_internal_GC_getThresholdAllocations(ObjHeader*)
     return static_cast<int64_t>(maxValue);
 }
 
-extern "C" void Kotlin_native_internal_GC_setTuneThreshold(ObjHeader*, int32_t value) {
-    bool enableTune = static_cast<bool>(value);
-    mm::GlobalData::Instance().gc().SetAutoTune(enableTune);
+extern "C" void Kotlin_native_internal_GC_setTuneThreshold(ObjHeader*, KBoolean value) {
+    mm::GlobalData::Instance().gc().SetAutoTune(value);
 }
 
-extern "C" bool Kotlin_native_internal_GC_getTuneThreshold(ObjHeader*) {
+extern "C" KBoolean Kotlin_native_internal_GC_getTuneThreshold(ObjHeader*) {
     return mm::GlobalData::Instance().gc().GetAutoTune();
 }
 
