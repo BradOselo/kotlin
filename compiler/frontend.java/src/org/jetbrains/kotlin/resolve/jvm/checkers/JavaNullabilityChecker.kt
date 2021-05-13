@@ -35,12 +35,12 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.ErrorsJvm
 import org.jetbrains.kotlin.resolve.scopes.receivers.ExpressionReceiver
 import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
 import org.jetbrains.kotlin.types.*
-import org.jetbrains.kotlin.types.checker.ClassicTypeCheckerContext
-import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
+import org.jetbrains.kotlin.types.checker.*
 import org.jetbrains.kotlin.types.expressions.SenselessComparisonChecker
 import org.jetbrains.kotlin.types.model.KotlinTypeMarker
 import org.jetbrains.kotlin.types.typeUtil.contains
 import org.jetbrains.kotlin.types.typeUtil.makeNotNullable
+import org.jetbrains.kotlin.types.typeUtil.supertypes
 
 class JavaNullabilityChecker(val upperBoundChecker: UpperBoundChecker) : AdditionalTypeChecker {
     override fun checkType(
@@ -233,31 +233,26 @@ class JavaNullabilityChecker(val upperBoundChecker: UpperBoundChecker) : Additio
     ) {
         if (TypeUtils.noExpectedType(expectedType)) return
 
-        val doesExpectedTypeContainsEnhancement = expectedType.contains { it is TypeWithEnhancement }
-        val doesExpressionTypeContainsEnhancement = expressionType.contains { it is TypeWithEnhancement }
+        @Suppress("NAME_SHADOWING")
+        val expressionType = exactedExpressionTypeByDataFlowNullability(expressionType, expressionTypeDataFlowValue, dataFlowInfo)
 
-        if (!doesExpectedTypeContainsEnhancement && !doesExpressionTypeContainsEnhancement) return
+        if (!expectedType.containsTypeEnhancement() && !expressionType.containsTypeEnhancement()) return
 
-        val enhancedExpectedType = if (doesExpectedTypeContainsEnhancement) expectedType.unwrapEnhancementDeeply() else expectedType
-        val enhancedExpressionType = enhanceExpressionTypeByDataFlowNullability(
-            if (doesExpressionTypeContainsEnhancement) expressionType.unwrapEnhancementDeeply() else expressionType,
-            expressionTypeDataFlowValue,
-            dataFlowInfo
-        )
-
-        val isEnhancedExpectedTypeSubtypeOfExpressionType =
-            KotlinTypeChecker.DEFAULT.isSubtypeOf(enhancedExpressionType, enhancedExpectedType)
+        val isEnhancedExpectedTypeSubtypeOfExpressionType = typeCheckerForEnhancedTypes.isSubtypeOf(expressionType, expectedType)
 
         if (isEnhancedExpectedTypeSubtypeOfExpressionType) return
 
-        val isExpectedTypeSubtypeOfExpressionType = KotlinTypeChecker.DEFAULT.isSubtypeOf(expressionType, expectedType)
+        val isExpectedTypeSubtypeOfExpressionType = typeCheckerForBaseTypes.isSubtypeOf(expressionType, expectedType)
 
         if (!isEnhancedExpectedTypeSubtypeOfExpressionType && isExpectedTypeSubtypeOfExpressionType) {
-            reportWarning(enhancedExpectedType, enhancedExpressionType)
+            reportWarning(expectedType.unwrapEnhancementDeeply(), expressionType.unwrapEnhancementDeeply())
         }
     }
 
-    private fun enhanceExpressionTypeByDataFlowNullability(
+    private fun KotlinType.containsTypeEnhancement() =
+        contains { it is TypeWithEnhancement } || supertypes().any { supertype -> supertype.contains { it is TypeWithEnhancement } }
+
+    private fun exactedExpressionTypeByDataFlowNullability(
         expressionType: KotlinType,
         expressionTypeDataFlowValue: () -> DataFlowValue,
         dataFlowInfo: DataFlowInfo,
@@ -275,6 +270,17 @@ class JavaNullabilityChecker(val upperBoundChecker: UpperBoundChecker) : Additio
         body()
     } else {
         null
+    }
+
+    companion object {
+        val typeCheckerForEnhancedTypes = NewKotlinTypeCheckerImpl(
+            kotlinTypeRefiner = KotlinTypeRefiner.Default,
+            kotlinTypePreparator = object : KotlinTypePreparator() {
+                override fun prepareType(type: KotlinTypeMarker): UnwrappedType =
+                    super.prepareType(type).let { it.getEnhancementDeeply() ?: it }.unwrap()
+            }
+        )
+        val typeCheckerForBaseTypes = NewKotlinTypeCheckerImpl(KotlinTypeRefiner.Default)
     }
 }
 
