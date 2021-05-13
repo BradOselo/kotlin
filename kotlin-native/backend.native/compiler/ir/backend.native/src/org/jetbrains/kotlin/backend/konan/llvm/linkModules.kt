@@ -19,6 +19,7 @@ internal fun llvmLinkModules2(context: Context, dest: LLVMModuleRef, src: LLVMMo
             // and then linked by the compiler altogether.
             // Just ignore such warnings for now:
             if (diagnostic.severity == LlvmDiagnostic.Severity.WARNING &&
+                    !context.inVerbosePhase &&
                     diagnostic.message.startsWith("linking module flags 'SDK Version': IDs have conflicting values")) return true
 
             return false
