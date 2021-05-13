@@ -21601,6 +21601,46 @@ public class FirBlackBoxCodegenTestGenerated extends AbstractFirBlackBoxCodegenT
         }
 
         @Nested
+        @TestMetadata("compiler/testData/codegen/box/ir/privateSignatures")
+        @TestDataPath("$PROJECT_ROOT")
+        public class PrivateSignatures {
+            @Test
+            public void testAllFilesPresentInPrivateSignatures() throws Exception {
+                KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/box/ir/privateSignatures"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.JVM_IR, true);
+            }
+
+            @Test
+            @TestMetadata("deepLocalClassProperties.kt")
+            public void testDeepLocalClassProperties() throws Exception {
+                runTest("compiler/testData/codegen/box/ir/privateSignatures/deepLocalClassProperties.kt");
+            }
+
+            @Test
+            @TestMetadata("deepLocalClassProperties2.kt")
+            public void testDeepLocalClassProperties2() throws Exception {
+                runTest("compiler/testData/codegen/box/ir/privateSignatures/deepLocalClassProperties2.kt");
+            }
+
+            @Test
+            @TestMetadata("deepLocalDefaultArgumentWithLocalClass.kt")
+            public void testDeepLocalDefaultArgumentWithLocalClass() throws Exception {
+                runTest("compiler/testData/codegen/box/ir/privateSignatures/deepLocalDefaultArgumentWithLocalClass.kt");
+            }
+
+            @Test
+            @TestMetadata("deepLocalFakeOverride.kt")
+            public void testDeepLocalFakeOverride() throws Exception {
+                runTest("compiler/testData/codegen/box/ir/privateSignatures/deepLocalFakeOverride.kt");
+            }
+
+            @Test
+            @TestMetadata("topLevelPrivateDelegate.kt")
+            public void testTopLevelPrivateDelegate() throws Exception {
+                runTest("compiler/testData/codegen/box/ir/privateSignatures/topLevelPrivateDelegate.kt");
+            }
+        }
+
+        @Nested
         @TestMetadata("compiler/testData/codegen/box/ir/serializationRegressions")
         @TestDataPath("$PROJECT_ROOT")
         public class SerializationRegressions {
